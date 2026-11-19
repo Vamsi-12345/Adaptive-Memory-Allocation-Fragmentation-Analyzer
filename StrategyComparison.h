@@ -50,6 +50,7 @@ private:
     ) const;
 
 public:
+    public:
     void runIndividualStrategy(
         int totalMemory,
         const std::vector<Process>& processes,
@@ -57,6 +58,12 @@ public:
     );
 
     void compareAll(
+        int totalMemory,
+        const std::vector<Process>& processes
+    );
+
+    // Returns structured results for GUI integration.
+    std::vector<StrategyResult> getComparisonResults(
         int totalMemory,
         const std::vector<Process>& processes
     );
