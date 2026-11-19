@@ -752,6 +752,43 @@ CPUSchedulingResult ProcessSimulation::runCPUSimulation(
 }
 
 // ============================================================
+// GET CPU SCHEDULING RESULTS FOR GUI BACKEND
+// ============================================================
+
+std::vector<CPUSchedulingResult>
+ProcessSimulation::getCPUSchedulingResults(int totalMemory)
+{
+    std::vector<CPUSchedulingResult> results;
+
+    FCFSScheduler fcfsScheduler;
+    PriorityScheduler priorityScheduler;
+
+    // Run FCFS (Non-preemptive).
+    CPUSchedulingResult fcfsResult =
+        runCPUSimulation(
+            totalMemory,
+            fcfsScheduler,
+            false,
+            "FCFS",
+            false
+        );
+
+    // Run Priority (Preemptive).
+    CPUSchedulingResult priorityResult =
+        runCPUSimulation(
+            totalMemory,
+            priorityScheduler,
+            true,
+            "Priority Scheduling",
+            false
+        );
+
+    results.push_back(fcfsResult);
+    results.push_back(priorityResult);
+
+    return results;
+}
+// ============================================================
 // PRIORITY SCHEDULING
 // ============================================================
 
