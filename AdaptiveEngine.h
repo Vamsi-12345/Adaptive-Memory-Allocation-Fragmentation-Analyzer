@@ -44,6 +44,12 @@ private:
     ) const;
 
 public:
+    // New function for GUI integration
+    std::vector<AdaptiveResult> getAdaptiveResults(
+        int totalMemory,
+        const std::vector<Process>& processes
+    );
+
     void run(
         int totalMemory,
         const std::vector<Process>& processes
