@@ -1,0 +1,3369 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>MEMORYX | Memory Management Analyzer</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #0b1020;
+    color: #e8ecf7;
+    min-height: 100vh;
+}
+
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar {
+    width: 245px;
+    flex-shrink: 0;
+    background: #111a30;
+    padding: 28px 18px;
+    border-right: 1px solid #26334f;
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: bold;
+    color: #65d5ff;
+    margin-bottom: 8px;
+}
+
+.tagline {
+    font-size: 11px;
+    color: #8998b8;
+    margin-bottom: 35px;
+}
+
+.nav-title {
+    font-size: 10px;
+    color: #71809e;
+    margin: 22px 10px 10px;
+    letter-spacing: 2px;
+}
+
+.nav-item {
+    padding: 13px 12px;
+    margin: 5px 0;
+    border-radius: 9px;
+    color: #aebbd4;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    background: #203b5e;
+    color: #65d5ff;
+}
+
+/* MAIN CONTENT */
+
+.main {
+    flex: 1;
+    min-width: 0;
+    padding: 30px;
+    overflow-x: hidden;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.topbar h1 {
+    font-size: 25px;
+}
+
+.status {
+    color: #65e6ae;
+    font-size: 12px;
+    background: #14352e;
+    padding: 9px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.subtitle {
+    color: #8998b8;
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+/* DASHBOARD CARDS */
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin: 25px 0;
+}
+
+.card {
+    background: #141f37;
+    border: 1px solid #293754;
+    padding: 22px;
+    border-radius: 13px;
+}
+
+.card p {
+    color: #91a0bd;
+    font-size: 12px;
+}
+
+.card h2 {
+    font-size: 28px;
+    margin-top: 14px;
+    color: #65d5ff;
+}
+
+/* PANELS */
+
+.panel {
+    background: #141f37;
+    border: 1px solid #293754;
+    padding: 24px;
+    border-radius: 13px;
+    margin-bottom: 20px;
+}
+
+.panel h2 {
+    font-size: 17px;
+    margin-bottom: 18px;
+}
+
+.panel p {
+    color: #aab7d0;
+    line-height: 1.7;
+    font-size: 13px;
+}
+
+/* BUTTONS */
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+button {
+    background: #167bb5;
+    border: none;
+    color: white;
+    padding: 12px 17px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: 0.2s;
+}
+
+button:hover {
+    background: #239bdc;
+}
+
+button.secondary {
+    background: #263653;
+}
+
+/* PAGE NAVIGATION */
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+/* FORMS */
+
+input,
+select {
+    background: #0d172b;
+    border: 1px solid #344563;
+    color: white;
+    padding: 12px;
+    border-radius: 7px;
+    width: 100%;
+    margin: 8px 0 15px;
+}
+
+label {
+    font-size: 12px;
+    color: #aab7d0;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+/* MEMORY VISUALIZATION */
+
+.memory-blocks {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.memory-block {
+    min-width: 90px;
+    padding: 18px 10px;
+    text-align: center;
+    border-radius: 7px;
+    background: #176d59;
+    font-size: 12px;
+}
+
+.memory-block.free {
+    background: #344563;
+}
+
+/* RESULT */
+
+.result {
+    margin-top: 18px;
+    padding: 15px;
+    border-radius: 8px;
+    background: #0d172b;
+    color: #65e6ae;
+    line-height: 1.8;
+    font-size: 13px;
+}
+
+/* RESPONSIVE DESIGN */
+
+@media(max-width: 1100px) {
+    .cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media(max-width: 900px) {
+    .sidebar {
+        width: 200px;
+    }
+
+    .main {
+        padding: 20px;
+    }
+}
+
+@media(max-width: 600px) {
+    .app {
+        display: block;
+    }
+
+    .sidebar {
+        width: 100%;
+    }
+
+    .main {
+        padding: 18px;
+    }
+
+    .cards,
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .topbar {
+        align-items: flex-start;
+        gap: 15px;
+        flex-direction: column;
+    }
+}
+
+/* STRATEGY COMPARISON */
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.strategy-card {
+    background: #0d172b;
+    border: 1px solid #344563;
+    border-radius: 11px;
+    padding: 20px;
+}
+
+.strategy-card h3 {
+    color: #65d5ff;
+    margin-bottom: 12px;
+}
+
+.score {
+    font-size: 30px;
+    font-weight: bold;
+    margin: 12px 0;
+}
+
+.metric {
+    margin: 17px 0;
+}
+
+.metric-label {
+    display: flex;
+    justify-content: space-between;
+    color: #aab7d0;
+    font-size: 12px;
+    margin-bottom: 7px;
+}
+
+.progress-track {
+    height: 9px;
+    background: #263653;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #35b9e9;
+    border-radius: 20px;
+}
+
+.recommendation {
+    border-left: 4px solid #65e6ae;
+    background: #102b2a;
+    padding: 18px;
+    border-radius: 7px;
+    line-height: 1.7;
+}
+
+.demo-note {
+    color: #e7bd70;
+    font-size: 12px;
+    margin-top: 12px;
+}
+
+@media(max-width: 900px) {
+    .comparison-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ADAPTIVE ENGINE */
+
+.adaptive-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.adaptive-card {
+    background: #0d172b;
+    border: 1px solid #344563;
+    border-radius: 11px;
+    padding: 20px;
+}
+
+.adaptive-card h3 {
+    color: #65d5ff;
+    margin-bottom: 15px;
+}
+
+.adaptive-score {
+    font-size: 29px;
+    font-weight: bold;
+    margin: 12px 0;
+}
+
+.winner-card {
+    background: #102b2a;
+    border: 1px solid #287b65;
+    padding: 22px;
+    border-radius: 11px;
+}
+
+.winner-card h2 {
+    color: #65e6ae;
+    margin-bottom: 12px;
+}
+
+.weight-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.weight-item {
+    background: #0d172b;
+    padding: 15px;
+    border-radius: 8px;
+    color: #aab7d0;
+    font-size: 13px;
+}
+
+.weight-item strong {
+    display: block;
+    color: #65d5ff;
+    font-size: 20px;
+    margin-top: 6px;
+}
+
+@media(max-width: 900px) {
+    .adaptive-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* CPU SCHEDULING */
+
+.scheduler-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.scheduler-card {
+    background: #0d172b;
+    border: 1px solid #344563;
+    border-radius: 11px;
+    padding: 20px;
+}
+
+.scheduler-card h3 {
+    color: #65d5ff;
+    margin-bottom: 12px;
+}
+
+.gantt-chart {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    margin: 20px 0;
+    padding: 10px 0;
+}
+
+.gantt-block {
+    min-width: 75px;
+    padding: 15px 10px;
+    background: #176d59;
+    border-radius: 7px;
+    text-align: center;
+    font-size: 12px;
+    flex: 1;
+}
+
+.gantt-block.idle {
+    background: #344563;
+}
+
+.gantt-time {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #aab7d0;
+    margin-top: 6px;
+}
+
+.metrics-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 15px;
+}
+
+.metrics-table th,
+.metrics-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #344563;
+    text-align: left;
+}
+
+.metrics-table th {
+    color: #65d5ff;
+}
+
+.scheduler-summary {
+    background: #0d172b;
+    padding: 16px;
+    border-radius: 8px;
+    margin-top: 18px;
+    line-height: 1.8;
+}
+
+@media(max-width: 900px) {
+    .scheduler-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* Live Three-Strategy Simulation: show only in Memory Simulation */
+
+#liveComparisonPanel {
+    display: none !important;
+}
+
+#simulation.active #liveComparisonPanel {
+    display: block !important;
+}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- jsPDF library -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+
+<!-- jsPDF AutoTable plugin -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+
+<!-- Chart.js Data Labels -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+<script>
+    Chart.register(ChartDataLabels);
+</script>
+</head>
+
+<body>
+
+<div class="app">
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+    <div class="logo">MEMORYX</div>
+
+    <div class="tagline">
+        ADAPTIVE MEMORY ALLOCATION ANALYZER
+    </div>
+
+    <div class="nav-title">MAIN MENU</div>
+
+    <div class="nav-item active"
+         onclick="showPage('dashboard', this)">
+         ▦ Dashboard
+    </div>
+
+    <div class="nav-item"
+         onclick="showPage('workloads', this)">
+         ▤ Workloads
+    </div>
+
+    <div class="nav-item"
+         onclick="showPage('simulation', this)">
+         ▣ Memory Simulation
+    </div>
+
+    <div class="nav-item"
+         onclick="showPage('comparison', this)">
+         ⇄ Strategy Comparison
+    </div>
+
+    <div class="nav-item"
+         onclick="showPage('adaptive', this)">
+         ✦ Adaptive Engine
+    </div>
+
+    <div class="nav-title">ANALYSIS</div>
+
+    <div class="nav-item"
+         onclick="showPage('scheduling', this)">
+         ◷ CPU Scheduling
+    </div>
+
+    <div class="nav-item"
+         onclick="showPage('reports', this)">
+         ▥ Reports
+    </div>
+
+</aside>
+
+
+<!-- MAIN CONTENT AREA -->
+
+<main class="main">
+
+    <!-- TOP BAR -->
+
+    <div class="topbar">
+
+        <div>
+            <h1 id="pageHeading">MEMORYX Dashboard</h1>
+
+            <p class="subtitle">
+                Adaptive Memory Allocation & Fragmentation Analyzer
+            </p>
+        </div>
+
+        <div class="status">
+            ● Frontend Demo
+        </div>
+
+    </div>
+
+
+    <!-- DASHBOARD PAGE -->
+
+    <section id="dashboard" class="page active">
+
+        <div class="cards">
+
+            <div class="card">
+                <p>Total Memory</p>
+                <h2>16000 MB</h2>
+            </div>
+
+            <div class="card">
+                <p>Allocation Strategies</p>
+                <h2>03</h2>
+            </div>
+
+            <div class="card">
+                <p>Workload Types</p>
+                <h2>05</h2>
+            </div>
+
+            <div class="card">
+                <p>CPU Schedulers</p>
+                <h2>02</h2>
+            </div>
+
+        </div>
+
+        <div class="panel">
+
+            <h2>Welcome to MEMORYX</h2>
+
+            <p>
+                MEMORYX is an adaptive memory allocation and fragmentation
+                analysis system. It evaluates First Fit, Best Fit and
+                Worst Fit strategies and compares their performance
+                using memory utilization, external fragmentation,
+                allocation failures and process completion.
+            </p>
+
+            <div class="actions">
+
+                <button onclick="showPage('workloads')">
+                    Explore Workloads
+                </button>
+
+                <button class="secondary"
+                        onclick="showPage('comparison')">
+                    Compare Strategies
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="panel">
+
+            <h2>Available Modules</h2>
+
+            <p>01. Process Simulation</p>
+            <p>02. Strategy Comparison</p>
+            <p>03. Adaptive Engine</p>
+            <p>04. CPU Scheduling</p>
+            <p>05. Performance Reports</p>
+
+        </div>
+
+    </section>
+
+
+    <!-- WORKLOADS PAGE -->
+
+    <section id="workloads" class="page">
+
+        <div class="panel">
+
+            <h2>Select Workload</h2>
+
+            <p>
+                Choose a workload type to explore memory allocation behaviour.
+            </p>
+
+            <label>Workload Type</label>
+
+            <select id="workloadType">
+
+                <option value="Basic">Basic Workload</option>
+
+                <option value="Fragmentation">
+                    Fragmentation Workload
+                </option>
+
+                <option value="Mixed">Mixed Workload</option>
+
+                <option value="Custom">Custom Workload</option>
+
+                <option value="Saved">Load Previously Saved</option>
+
+            </select>
+
+            <div class="actions">
+
+                <button onclick="selectWorkload()">
+                    Load Workload
+                </button>
+
+            </div>
+
+            <div id="workloadResult" class="result">
+                Select a workload to continue.
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <h2>Custom Process Input</h2>
+
+            <div class="form-grid">
+
+                <div>
+                    <label>Process ID</label>
+                    <input type="number"
+                           id="pid"
+                           placeholder="Example: 101">
+                </div>
+
+                <div>
+                    <label>Memory Required (MB)</label>
+                    <input type="number"
+                           id="memory"
+                           placeholder="Example: 500">
+                </div>
+
+                <div>
+                    <label>Arrival Time</label>
+                    <input type="number"
+                           id="arrival"
+                           placeholder="Example: 0">
+                </div>
+
+                <div>
+                    <label>Execution Time</label>
+                    <input type="number"
+                           id="execution"
+                           placeholder="Example: 5">
+                </div>
+
+                <div>
+                    <label>Priority</label>
+                    <input type="number"
+                           id="priority"
+                           placeholder="Example: 1">
+                </div>
+
+            </div>
+
+            <button onclick="addProcess()">
+                Add Process
+            </button>
+            <button onclick="saveCustomWorkload()">Save Custom Workload</button>
+
+            <div id="processResult" class="result">
+                No custom processes added.
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- MEMORY SIMULATION PAGE -->
+
+   
+<!-- =========================================================
+     MEMORY SIMULATION PAGE
+========================================================= -->
+
+<section id="simulation" class="page">
+
+    <!-- ORIGINAL MEMORY SIMULATION -->
+    <div class="panel">
+
+        <h2>Memory Simulation</h2>
+
+        <p>
+            Run actual memory allocation using the MEMORYX C++ engine.
+            Select a workload, memory size and allocation strategy.
+        </p>
+
+        <label>Total Memory (MB)</label>
+
+        <input
+            type="number"
+            id="totalMemory"
+            value="16000"
+            min="1"
+        >
+
+        <label>Allocation Strategy</label>
+
+        <select id="strategy">
+            <option>First Fit</option>
+            <option>Best Fit</option>
+            <option>Worst Fit</option>
+        </select>
+
+        <div class="actions">
+
+            <button onclick="runMemorySimulation()">
+                Run Memory Simulation
+            </button>
+
+            <button
+                class="secondary"
+                onclick="resetSimulation()"
+            >
+                Reset
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- MEMORY BLOCK VISUALIZATION -->
+    <div class="panel">
+
+        <h2>Memory Block Visualization</h2>
+
+        <p>
+            Green blocks represent allocated memory;
+            grey blocks represent free memory.
+        </p>
+
+        <div class="memory-blocks" id="memoryBlocks">
+
+            <div class="memory-block free">
+                Free<br>16000 MB
+            </div>
+
+        </div>
+
+        <div id="simulationResult" class="result">
+            Simulation has not started.
+        </div>
+
+    </div>
+
+
+    <!-- LIVE THREE-STRATEGY SIMULATION -->
+    <div class="panel" id="liveComparisonPanel">
+
+        <h2>Live Three-Strategy Simulation</h2>
+
+        <p>
+            Compare First Fit, Best Fit and Worst Fit
+            using the same workload and independent memory layouts.
+        </p>
+
+        <label>Total Memory (MB)</label>
+
+        <input
+            type="number"
+            id="liveTotalMemory"
+            value="16000"
+            min="1"
+        >
+
+        <div class="actions">
+
+            <button onclick="initializeLiveSimulation()">
+                Initialize Three Simulations
+            </button>
+
+        </div>
+
+        <hr>
+
+        <h3>Process Allocation</h3>
+
+        <label>Process ID</label>
+
+        <input
+            type="number"
+            id="livePID"
+            placeholder="Enter PID"
+        >
+
+        <label>Memory Required (MB)</label>
+
+        <input
+            type="number"
+            id="liveMemory"
+            placeholder="Enter memory"
+        >
+
+        <div class="actions">
+
+            <button onclick="allocateLiveProcess()">
+                Allocate Process
+            </button>
+
+            <button
+                class="secondary"
+                onclick="deallocateLiveProcess()"
+            >
+                Deallocate Process
+            </button>
+
+            <button
+                class="secondary"
+                onclick="resetLiveSimulation()"
+            >
+                Reset
+            </button>
+
+        </div>
+
+        <div id="liveSimulationResults" class="result">
+            Initialize the simulation to begin.
+        </div>
+
+        <div id="liveStrategyLayouts"></div>
+
+    </div>
+
+</section>
+
+<!-- =========================================================
+     END OF MEMORY SIMULATION PAGE
+========================================================= -->
+
+
+
+
+    <!-- OTHER MODULES - COMING NEXT -->
+
+   
+
+<section id="comparison" class="page">
+
+    <div class="panel">
+        <h2>Strategy Performance Comparison</h2>
+
+        <p>
+            Compare First Fit, Best Fit and Worst Fit using
+            actual results generated by the MEMORYX C++ engine.
+        </p>
+
+        <div class="form-grid" style="margin-top:20px">
+
+            <div>
+                <label>Workload Type</label>
+                <select id="comparisonWorkload">
+                    <option value="Basic">Basic Workload</option>
+                    <option value="Fragmentation">Fragmentation Workload</option>
+                    <option value="Mixed">Mixed Workload</option>
+                    <option value="Saved">Saved Workload</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Total Memory (MB)</label>
+                <input
+                    type="number"
+                    id="comparisonTotalMemory"
+                    value="16000"
+                    min="1">
+            </div>
+
+        </div>
+
+        <div class="actions">
+            <button onclick="showComparison()">
+                Run C++ Strategy Comparison
+            </button>
+        </div>
+
+        <p id="comparisonStatus" class="demo-note">
+            Ready to run the C++ comparison.
+        </p>
+    </div>
+
+    <div class="comparison-grid" id="comparisonCards">
+
+        <div class="strategy-card">
+            <h3>First Fit</h3>
+            <p>Waiting for comparison...</p>
+        </div>
+
+        <div class="strategy-card">
+            <h3>Best Fit</h3>
+            <p>Waiting for comparison...</p>
+        </div>
+
+        <div class="strategy-card">
+            <h3>Worst Fit</h3>
+            <p>Waiting for comparison...</p>
+        </div>
+
+    </div>
+
+    <div class="panel">
+        <h2>Performance Analysis</h2>
+
+        <div id="comparisonMetrics">
+            <p>Actual C++ comparison metrics will appear here.</p>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Strategy Recommendation</h2>
+
+        <div id="recommendation" class="recommendation">
+            Run the C++ comparison to receive a recommendation.
+        </div>
+    </div>
+
+</section>
+
+
+
+    
+
+<section id="adaptive" class="page">
+
+    <div class="panel">
+
+        <h2>Adaptive Memory Allocation Engine</h2>
+
+        <p>
+            The Adaptive Engine evaluates First Fit, Best Fit and
+            Worst Fit using actual C++ results and recommends the
+            strategy with the highest calculated performance score.
+        </p>
+
+        <div class="form-grid" style="margin-top:20px">
+
+            <div>
+                <label>Workload Type</label>
+                <select id="adaptiveWorkload">
+                    <option value="Basic">Basic Workload</option>
+                    <option value="Fragmentation">Fragmentation Workload</option>
+                    <option value="Mixed">Mixed Workload</option>
+                    <option value="Saved">Saved Workload</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Total Memory (MB)</label>
+                <input
+                    type="number"
+                    id="adaptiveTotalMemory"
+                    value="16000"
+                    min="1">
+            </div>
+
+        </div>
+
+        <div class="actions">
+            <button onclick="runAdaptiveEngine()">
+                Run C++ Adaptive Analysis
+            </button>
+        </div>
+
+        <p id="adaptiveStatus" class="demo-note">
+            Ready to run the C++ Adaptive Engine.
+        </p>
+
+    </div>
+
+    <div class="adaptive-grid" id="adaptiveCards">
+
+        <div class="adaptive-card">
+            <h3>First Fit</h3>
+            <p>Waiting for analysis...</p>
+        </div>
+
+        <div class="adaptive-card">
+            <h3>Best Fit</h3>
+            <p>Waiting for analysis...</p>
+        </div>
+
+        <div class="adaptive-card">
+            <h3>Worst Fit</h3>
+            <p>Waiting for analysis...</p>
+        </div>
+
+    </div>
+
+    <div class="panel">
+
+        <h2>Adaptive Recommendation</h2>
+
+        <div id="adaptiveRecommendation" class="winner-card">
+
+            <h2>Awaiting Analysis</h2>
+
+            <p>
+                Run the Adaptive Engine to generate an actual
+                C++ strategy recommendation.
+            </p>
+
+        </div>
+
+    </div>
+    <div class="panel">
+    <h2>Adaptive Performance Comparison</h2>
+    <p>Comparison of adaptive scores for all three allocation strategies.</p>
+
+  <div style="width:100%; height:350px; position:relative;">
+    <canvas id="adaptiveChart"></canvas>
+</div>
+</div>
+    <div class="panel">
+
+        <h2>Adaptive Scoring Parameters</h2>
+
+        <div class="weight-list">
+
+            <div class="weight-item">
+                Memory Utilization
+                <strong>35%</strong>
+            </div>
+
+            <div class="weight-item">
+                Fragmentation Score
+                <strong>35%</strong>
+            </div>
+
+            <div class="weight-item">
+                Failure Score
+                <strong>20%</strong>
+            </div>
+
+            <div class="weight-item">
+                Completion Score
+                <strong>10%</strong>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+ 
+<!-- CPU SCHEDULING PAGE -->
+
+
+<!-- CPU SCHEDULING PAGE -->
+
+<section id="scheduling" class="page">
+
+    <div class="panel">
+
+        <h2>CPU Scheduling Management</h2>
+
+        <p>
+            Compare FCFS (Non-preemptive) and
+            Priority (Preemptive) Scheduling using
+            the actual MEMORYX C++ engine.
+        </p>
+
+        <div class="form-grid" style="margin-top:20px">
+
+            <div>
+                <label>Workload Type</label>
+
+                <select id="cpuWorkload">
+                    <option value="Basic">Basic Workload</option>
+                    <option value="Fragmentation">Fragmentation Workload</option>
+                    <option value="Mixed">Mixed Workload</option>
+                    <option value="Saved">Saved Workload</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Total Memory (MB)</label>
+
+                <input
+                    type="number"
+                    id="cpuTotalMemory"
+                    value="16000"
+                    min="1">
+            </div>
+
+        </div>
+
+        <div class="actions">
+
+            <button onclick="runCPUScheduler('FCFS')">
+                Run FCFS
+            </button>
+
+            <button onclick="runCPUScheduler('PRIORITY')">
+                Run Priority Scheduling
+            </button>
+
+            <button
+                class="secondary"
+                onclick="compareCPUSchedulers()">
+                Compare Both
+            </button>
+
+        </div>
+
+        <p id="cpuStatus" class="demo-note">
+            Ready to run CPU Scheduling through the C++ backend.
+        </p>
+
+    </div>
+
+
+    <div class="scheduler-grid" id="cpuResultCards">
+
+        <div class="scheduler-card">
+            <h3>FCFS Scheduling</h3>
+            <p>Waiting for C++ results...</p>
+        </div>
+
+        <div class="scheduler-card">
+            <h3>Priority Scheduling</h3>
+            <p>Waiting for C++ results...</p>
+        </div>
+
+    </div>
+
+
+    <div class="panel">
+
+        <h2>CPU Scheduling Results</h2>
+
+        <div id="schedulerResults">
+            <p>Run a scheduler to display actual C++ metrics.</p>
+        </div>
+
+    </div>
+
+
+    <div class="scheduler-grid">
+
+        <div class="scheduler-card">
+
+            <h3>FCFS Scheduling</h3>
+
+            <p>
+                Processes execute in order of arrival.
+                Once a process starts, it runs until completion.
+                This is a non-preemptive scheduling algorithm.
+            </p>
+
+        </div>
+
+        <div class="scheduler-card">
+
+            <h3>Priority Scheduling</h3>
+
+            <p>
+                The available process with the highest priority
+                executes. A newly arrived higher-priority process
+                can interrupt the currently running process.
+                This implementation uses preemptive scheduling.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+   
+<section id="reports" class="page">
+
+    <div class="panel">
+        <h2>Performance Reports</h2>
+        <p>
+            Analyze memory allocation, fragmentation,
+            algorithm performance and CPU scheduling.
+        </p>
+
+        <div class="form-grid">
+            <div>
+                <label for="reportWorkload">Workload Type</label>
+                <select id="reportWorkload">
+                    <option value="Basic">Basic Workload</option>
+                    <option value="Fragmentation">Fragmentation Workload</option>
+                    <option value="Mixed">Mixed Workload</option>
+                    <option value="Saved">Saved Workload</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="reportMemory">Total Memory (MB)</label>
+                <input
+                    type="number"
+                    id="reportMemory"
+                    value="16000"
+                    min="1"
+                >
+            </div>
+        </div>
+
+        <button onclick="generatePerformanceReport()">
+            Generate Performance Report
+        </button>
+        <button onclick="exportPerformanceReportPDF()">
+    <i class="fas fa-file-pdf"></i> Export PDF Report
+</button>
+
+        <div id="reportStatus" class="result">
+            Select a workload and generate your report.
+        </div>
+    </div>
+
+    <div id="reportResults" style="display:none;">
+
+        <div class="panel">
+            <h2>Memory Performance Overview</h2>
+
+            <div class="dashboard-grid" id="reportSummaryCards">
+            </div>
+        </div>
+
+        <div class="panel">
+    <h2>Strategy Performance Analysis</h2>
+    <div id="reportStrategyResults"></div>
+</div>
+
+<div class="panel">
+    <h2>Memory Performance Charts</h2>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <h3>Memory Utilization</h3>
+            <canvas id="utilizationChart"></canvas>
+        </div>
+
+        <div class="card">
+            <h3>External Fragmentation</h3>
+            <canvas id="fragmentationChart"></canvas>
+        </div>
+
+        <div class="card">
+            <h3>Final Performance Score</h3>
+            <canvas id="scoreChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>CPU Scheduling Charts</h2>
+
+    <div class="card">
+        <h3>FCFS vs Priority Scheduling</h3>
+        <canvas id="cpuChart"></canvas>
+    </div>
+</div>
+
+        <div class="panel">
+            <h2>CPU Scheduling Analysis</h2>
+            <div id="reportCPUResults"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Report Summary</h2>
+            <div id="reportConclusion"></div>
+        </div>
+
+    </div>
+
+</section>
+
+
+</main>
+
+</div>
+
+
+<!-- JAVASCRIPT -->
+
+<script>
+let customProcesses = [];
+
+/* PAGE NAVIGATION */
+
+
+/* PAGE NAVIGATION */
+
+function showPage(pageId, clickedItem) {
+
+    // Hide all pages
+    document.querySelectorAll(".page").forEach(page => {
+        page.classList.remove("active");
+    });
+
+    // Show selected page
+    const selectedPage = document.getElementById(pageId);
+
+    if (selectedPage) {
+        selectedPage.classList.add("active");
+    }
+
+    // Update sidebar navigation
+    document.querySelectorAll(".nav-item").forEach(item => {
+        item.classList.remove("active");
+    });
+
+    if (clickedItem) {
+        clickedItem.classList.add("active");
+    } else {
+        document.querySelectorAll(".nav-item").forEach(item => {
+            if (item.getAttribute("onclick")?.includes(pageId)) {
+                item.classList.add("active");
+            }
+        });
+    }
+
+    // Update page heading
+    const headings = {
+        dashboard: "MEMORYX Dashboard",
+        workloads: "Workload Management",
+        simulation: "Memory Simulation",
+        comparison: "Strategy Comparison",
+        adaptive: "Adaptive Engine",
+        scheduling: "CPU Scheduling",
+        reports: "Performance Reports"
+    };
+
+    document.getElementById("pageHeading").textContent =
+        headings[pageId] || "MEMORYX";
+}
+
+/* WORKLOAD SELECTION */
+
+async function selectWorkload() {
+    const type = document.getElementById("workloadType").value;
+    const resultBox = document.getElementById("workloadResult");
+
+    if (type === "Custom") {
+        resultBox.innerHTML =
+            "Please add your custom processes below.";
+        return;
+    }
+
+    resultBox.textContent = "Loading workload from C++ backend...";
+
+    try {
+        const response = await fetch("/api/workload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Unable to load workload.");
+        }
+
+        let html = `
+            <h3>${result.workloadName}</h3>
+            <p><b>Total Processes:</b> ${result.totalProcesses}</p>
+            <div style="overflow-x:auto">
+            <table class="metrics-table">
+                <thead>
+                    <tr>
+                        <th>PID</th>
+                        <th>Memory (MB)</th>
+                        <th>Arrival</th>
+                        <th>Execution</th>
+                        <th>Priority</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        result.processes.forEach(process => {
+            html += `
+                <tr>
+                    <td>${process.pid}</td>
+                    <td>${process.memory}</td>
+                    <td>${process.arrival}</td>
+                    <td>${process.execution}</td>
+                    <td>${process.priority}</td>
+                </tr>
+            `;
+        });
+
+        html += "</tbody></table></div>";
+        resultBox.innerHTML = html;
+
+    } catch (error) {
+        resultBox.innerHTML =
+            "<b>Backend Error:</b> " + error.message;
+    }
+}
+async function saveCustomWorkload() {
+    if (customProcesses.length === 0) {
+        alert("Please add at least one process first.");
+        return;
+    }
+
+    const workloadName = prompt("Enter a name for your workload:");
+
+    if (!workloadName || !workloadName.trim()) {
+        return;
+    }
+
+    const resultBox = document.getElementById("workloadResult");
+
+    resultBox.textContent = "Saving custom workload...";
+
+    try {
+        const response = await fetch("/api/save-workload", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: workloadName.trim(),
+                processes: customProcesses.map(p => ({
+                    pid: Number(p.pid),
+                    memory: Number(p.memory),
+                    arrival: Number(p.arrival),
+                    execution: Number(p.execution),
+                    priority: Number(p.priority)
+                }))
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Unable to save workload.");
+        }
+
+        resultBox.innerHTML =
+            `<b>${result.message}</b>`;
+
+    } catch (error) {
+        resultBox.innerHTML =
+            `<b>Save Error:</b> ${error.message}`;
+    }
+}
+
+/* ADD CUSTOM PROCESS */
+
+function addProcess() {
+    const process = {
+        pid: document.getElementById("pid").value,
+        memory: document.getElementById("memory").value,
+        arrival: document.getElementById("arrival").value,
+        execution: document.getElementById("execution").value,
+        priority: document.getElementById("priority").value
+    };
+
+    if (Object.values(process).some(value => value === "")) {
+        alert("Please fill in all process details.");
+        return;
+    }
+
+    if (
+        Number(process.pid) < 0 ||
+        Number(process.memory) <= 0 ||
+        Number(process.arrival) < 0 ||
+        Number(process.execution) <= 0 ||
+        Number(process.priority) < 0 ||
+        !Object.values(process).every(value =>
+            Number.isFinite(Number(value))
+        )
+    ) {
+        alert("Please enter valid process values.");
+        return;
+    }
+
+    if (customProcesses.some(p => p.pid === process.pid)) {
+        alert("This Process ID already exists.");
+        return;
+    }
+
+    customProcesses.push(process);
+
+    document.getElementById("processResult").innerHTML =
+        customProcesses.map(p =>
+            `PID: ${p.pid} | Memory: ${p.memory} MB | Arrival: ${p.arrival} | Execution: ${p.execution} | Priority: ${p.priority}`
+        ).join("<br>");
+}
+
+
+/* MEMORY SIMULATION */
+
+async function runMemorySimulation() {
+    const total = Number(document.getElementById("totalMemory").value);
+    const strategy = document.getElementById("strategy").value;
+    const workloadType = document.getElementById("workloadType").value;
+
+    const blocksBox = document.getElementById("memoryBlocks");
+    const resultBox = document.getElementById("simulationResult");
+
+    if (!Number.isInteger(total) || total <= 0) {
+        alert("Enter a valid positive whole number for total memory.");
+        return;
+    }
+
+    if (workloadType === "Custom") {
+        resultBox.textContent =
+            "Custom workload integration is not available yet.";
+        return;
+    }
+
+    resultBox.textContent = "Running C++ memory simulation...";
+    blocksBox.innerHTML = "";
+
+    try {
+        const response = await fetch("/api/simulation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                type: workloadType,
+                totalMemory: total,
+                strategy
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Simulation failed.");
+        }
+
+        blocksBox.innerHTML = result.blocks.map(block => {
+            const label = block.free ? "Free" : "P" + block.processId;
+            const statusClass = block.free ? "free" : "";
+
+            return `
+                <div class="memory-block ${statusClass}"
+                     style="flex: ${block.size} 1 0;">
+                    <strong>${label}</strong>
+                    <br>${block.size} MB
+                    <br><small>Start: ${block.startAddress}</small>
+                </div>
+            `;
+        }).join("");
+
+        const rows = result.allocationResults.map(item => `
+            <tr>
+                <td>${item.pid}</td>
+                <td>${item.memory} MB</td>
+                <td>${item.allocated ? "Successful" : "Failed"}</td>
+            </tr>
+        `).join("");
+
+        resultBox.innerHTML = `
+            <h3>${result.workloadName}</h3>
+            <p><b>Strategy:</b> ${result.strategy}</p>
+            <p><b>Total Memory:</b> ${result.totalMemory} MB</p>
+            <p><b>Total Processes:</b> ${result.totalProcesses}</p>
+            <p><b>Successful Allocations:</b> ${result.successfulAllocations}</p>
+            <p><b>Failed Allocations:</b> ${result.failedAllocations}</p>
+            <p><b>Allocated Memory:</b> ${result.allocatedMemory} MB</p>
+            <p><b>Free Memory:</b> ${result.freeMemory} MB</p>
+            <p><b>Memory Utilization:</b> ${result.utilizationPercentage}%</p>
+
+            <h3>Allocation Results</h3>
+            <div style="overflow-x:auto">
+                <table class="metrics-table">
+                    <thead>
+                        <tr>
+                            <th>PID</th>
+                            <th>Memory Required</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        `;
+
+    } catch (error) {
+        resultBox.innerHTML =
+            "<b>Backend Error:</b> " + error.message;
+    }
+}
+
+
+/* RESET SIMULATION */
+
+function resetSimulation() {
+    const total = Number(document.getElementById("totalMemory").value);
+
+    if (!Number.isFinite(total) || total <= 0) {
+        alert("Enter a valid total memory.");
+        return;
+    }
+
+    document.getElementById("memoryBlocks").innerHTML =
+        `<div class="memory-block free">Free<br>${total} MB</div>`;
+
+    document.getElementById("simulationResult").textContent =
+        "Simulation has been reset.";
+}
+
+
+/* ==========================================
+   THREE STRATEGY LIVE MEMORY SIMULATION
+========================================== */
+
+let liveMemoryStates = {};
+let liveHistory = [];
+let liveInitialized = false;
+
+const liveStrategies = ["First Fit", "Best Fit", "Worst Fit"];
+
+function initializeLiveSimulation() {
+
+    const total = Number(
+        document.getElementById("liveTotalMemory").value
+    );
+
+    if (!Number.isInteger(total) || total <= 0) {
+        alert("Enter valid total memory.");
+        return;
+    }
+
+    liveMemoryStates = {};
+
+    liveStrategies.forEach(strategy => {
+        liveMemoryStates[strategy] = [
+            {
+                startAddress: 0,
+                size: total,
+                free: true,
+                processId: -1
+            }
+        ];
+    });
+
+    liveHistory = [];
+    liveInitialized = true;
+
+    renderLiveSimulation("All three strategies initialized.");
+}
+
+
+function findLiveBlock(blocks, required, strategy) {
+
+    let selectedIndex = -1;
+
+    for (let i = 0; i < blocks.length; i++) {
+
+        if (!blocks[i].free || blocks[i].size < required) {
+            continue;
+        }
+
+        if (strategy === "First Fit") {
+            return i;
+        }
+
+        if (strategy === "Best Fit") {
+
+            if (
+                selectedIndex === -1 ||
+                blocks[i].size < blocks[selectedIndex].size
+            ) {
+                selectedIndex = i;
+            }
+        }
+
+        if (strategy === "Worst Fit") {
+
+            if (
+                selectedIndex === -1 ||
+                blocks[i].size > blocks[selectedIndex].size
+            ) {
+                selectedIndex = i;
+            }
+        }
+    }
+
+    return selectedIndex;
+}
+
+
+function allocateInStrategy(blocks, pid, required, strategy) {
+
+    const index = findLiveBlock(blocks, required, strategy);
+
+    if (index === -1) {
+        return {
+            success: false,
+            message: "No suitable free block found."
+        };
+    }
+
+    const selectedBlock = blocks[index];
+
+    const originalSize = selectedBlock.size;
+    const startAddress = selectedBlock.startAddress;
+
+    blocks[index] = {
+        startAddress: startAddress,
+        size: required,
+        free: false,
+        processId: pid
+    };
+
+    if (originalSize > required) {
+
+        blocks.splice(index + 1, 0, {
+            startAddress: startAddress + required,
+            size: originalSize - required,
+            free: true,
+            processId: -1
+        });
+    }
+
+    return {
+        success: true,
+        message:
+            "Allocated in block starting at " +
+            startAddress + " MB (" +
+            originalSize + " MB before allocation)."
+    };
+}
+
+
+function allocateLiveProcess() {
+
+    if (!liveInitialized) {
+        alert("Initialize the simulation first.");
+        return;
+    }
+
+    const pid = Number(
+        document.getElementById("livePID").value
+    );
+
+    const required = Number(
+        document.getElementById("liveMemory").value
+    );
+
+    if (
+        !Number.isInteger(pid) ||
+        pid < 0 ||
+        !Number.isInteger(required) ||
+        required <= 0
+    ) {
+        alert("Enter a valid PID and memory requirement.");
+        return;
+    }
+
+    if (liveStrategies.some(strategy =>
+        liveMemoryStates[strategy].some(block =>
+            !block.free && block.processId === pid
+        )
+    )) {
+        alert("This PID is already allocated.");
+        return;
+    }
+
+    const results = [];
+
+    liveStrategies.forEach(strategy => {
+
+        const result = allocateInStrategy(
+            liveMemoryStates[strategy],
+            pid,
+            required,
+            strategy
+        );
+
+        results.push({
+            strategy,
+            success: result.success,
+            message: result.message
+        });
+    });
+
+    liveHistory.push({
+        action: "Allocation",
+        pid,
+        memory: required
+    });
+
+    renderLiveSimulation(
+        "Allocation result for P" + pid,
+        results
+    );
+}
+
+
+function deallocateLiveProcess() {
+
+    if (!liveInitialized) {
+        alert("Initialize the simulation first.");
+        return;
+    }
+
+    const pid = Number(
+        document.getElementById("livePID").value
+    );
+
+    if (!Number.isInteger(pid) || pid < 0) {
+        alert("Enter a valid PID.");
+        return;
+    }
+
+    const allAllocated = liveStrategies.every(strategy =>
+        liveMemoryStates[strategy].some(block =>
+            !block.free && block.processId === pid
+        )
+    );
+
+    if (!allAllocated) {
+        alert(
+            "This process is not allocated in all three strategies."
+        );
+        return;
+    }
+
+    liveStrategies.forEach(strategy => {
+
+        const blocks = liveMemoryStates[strategy];
+
+        const index = blocks.findIndex(block =>
+            !block.free && block.processId === pid
+        );
+
+        blocks[index].free = true;
+        blocks[index].processId = -1;
+
+        mergeLiveFreeBlocks(blocks);
+    });
+
+    liveHistory.push({
+        action: "Deallocation",
+        pid
+    });
+
+    renderLiveSimulation(
+        "Process P" + pid + " deallocated in all three strategies."
+    );
+}
+
+
+function mergeLiveFreeBlocks(blocks) {
+
+    for (let i = 0; i < blocks.length - 1; i++) {
+
+        if (blocks[i].free && blocks[i + 1].free) {
+
+            blocks[i].size += blocks[i + 1].size;
+
+            blocks.splice(i + 1, 1);
+
+            i--;
+        }
+    }
+}
+
+
+function renderLiveSimulation(message, results = []) {
+
+    const total = Number(
+        document.getElementById("liveTotalMemory").value
+    );
+
+    const layouts = document.getElementById(
+        "liveStrategyLayouts"
+    );
+
+    const summary = document.getElementById(
+        "liveSimulationResults"
+    );
+
+    summary.innerHTML = "<b>" + message + "</b>";
+
+    results.forEach(result => {
+        summary.innerHTML +=
+            "<p><b>" + result.strategy + ":</b> " +
+            result.message + "</p>";
+    });
+
+    layouts.innerHTML = "";
+
+    liveStrategies.forEach(strategy => {
+
+        const blocks = liveMemoryStates[strategy];
+
+        const allocated = blocks
+            .filter(block => !block.free)
+            .reduce((sum, block) => sum + block.size, 0);
+
+        const free = total - allocated;
+
+        const card = document.createElement("div");
+        card.className = "panel";
+
+        const heading = document.createElement("h3");
+        heading.textContent = strategy;
+        card.appendChild(heading);
+
+        const metrics = document.createElement("p");
+        metrics.textContent =
+            "Allocated: " + allocated +
+            " MB | Free: " + free +
+            " MB | Utilization: " +
+            ((allocated / total) * 100).toFixed(2) + "%";
+
+        card.appendChild(metrics);
+
+        const bar = document.createElement("div");
+        bar.className = "memory-blocks";
+
+        blocks.forEach(block => {
+
+            const segment = document.createElement("div");
+
+            segment.className =
+                "memory-block " +
+                (block.free ? "free" : "");
+
+            segment.style.flex = block.size + " 1 0";
+
+            segment.innerHTML =
+                "<strong>" +
+                (block.free
+                    ? "Free"
+                    : "P" + block.processId) +
+                "</strong><br>" +
+                block.size + " MB<br>" +
+                "<small>Start: " +
+                block.startAddress + "</small>";
+
+            bar.appendChild(segment);
+        });
+
+        card.appendChild(bar);
+        layouts.appendChild(card);
+    });
+}
+
+
+function resetLiveSimulation() {
+
+    liveInitialized = false;
+    liveMemoryStates = {};
+    liveHistory = [];
+
+    document.getElementById(
+        "liveStrategyLayouts"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "liveSimulationResults"
+    ).textContent = "Simulation reset.";
+}
+
+/* STRATEGY COMPARISON */
+
+async function showComparison() {
+    const workloadType =
+        document.getElementById("comparisonWorkload").value;
+
+    const totalMemory =
+        Number(document.getElementById("comparisonTotalMemory").value);
+
+    const cardsBox = document.getElementById("comparisonCards");
+    const metricsBox = document.getElementById("comparisonMetrics");
+    const recommendationBox = document.getElementById("recommendation");
+    const statusBox = document.getElementById("comparisonStatus");
+
+    if (!Number.isInteger(totalMemory) || totalMemory <= 0) {
+        alert("Enter a valid positive whole number for total memory.");
+        return;
+    }
+
+    statusBox.textContent = "Running comparison through C++...";
+    cardsBox.innerHTML = "<p>Calculating results...</p>";
+    metricsBox.innerHTML = "";
+    recommendationBox.textContent = "Waiting for results...";
+
+    try {
+        const response = await fetch("/api/comparison", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: workloadType, totalMemory })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Comparison failed.");
+        }
+
+        if (!Array.isArray(result.results) || result.results.length !== 3) {
+            throw new Error("Incomplete strategy comparison results.");
+        }
+
+        cardsBox.innerHTML = result.results.map(strategy => {
+            const utilization = Number(strategy.averageUtilization);
+            const fragmentation =
+                Number(strategy.averageExternalFragmentation);
+            const score = Number(strategy.finalScore);
+
+            return `
+                <div class="strategy-card">
+                    <h3>${strategy.strategyName}</h3>
+                    <p>Actual C++ Final Score</p>
+                    <div class="score">${score.toFixed(2)}%</div>
+
+                    <div class="metric">
+                        <div class="metric-label">
+                            <span>Average Utilization</span>
+                            <span>${utilization.toFixed(2)}%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill"
+                                 style="width:${Math.max(0, Math.min(100, utilization))}%">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric">
+                        <div class="metric-label">
+                            <span>External Fragmentation</span>
+                            <span>${fragmentation.toFixed(2)}%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill"
+                                 style="width:${Math.max(0, Math.min(100, fragmentation))}%">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric-label">
+                        <span>Completed Processes</span>
+                        <span>${strategy.completedProcesses}</span>
+                    </div>
+
+                    <div class="metric-label">
+                        <span>Allocation Failures</span>
+                        <span>${strategy.allocationFailures}</span>
+                    </div>
+
+                    <div class="metric-label">
+                        <span>Peak Used Memory</span>
+                        <span>${strategy.peakUsedMemory} MB</span>
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        const rows = result.results.map(strategy => `
+            <tr>
+                <td>${strategy.strategyName}</td>
+                <td>${Number(strategy.utilizationScore).toFixed(2)}</td>
+                <td>${Number(strategy.fragmentationScore).toFixed(2)}</td>
+                <td>${Number(strategy.failureScore).toFixed(2)}</td>
+                <td>${Number(strategy.completionScore).toFixed(2)}</td>
+                <td><strong>${Number(strategy.finalScore).toFixed(2)}</strong></td>
+            </tr>
+        `).join("");
+
+        metricsBox.innerHTML = `
+            <h3>${result.workloadName}</h3>
+            <p><strong>Total Memory:</strong> ${result.totalMemory} MB</p>
+            <p><strong>Total Processes:</strong> ${result.totalProcesses}</p>
+
+            <div style="overflow-x:auto">
+                <table class="metrics-table">
+                    <thead>
+                        <tr>
+                            <th>Strategy</th>
+                            <th>Utilization</th>
+                            <th>Fragmentation</th>
+                            <th>Failure</th>
+                            <th>Completion</th>
+                            <th>Final Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top:20px">Scoring Formula</h3>
+            <p>
+                Final Score =
+                (0.35 × Utilization Score) +
+                (0.30 × Fragmentation Score) +
+                (0.20 × Failure Score) +
+                (0.15 × Completion Score)
+            </p>
+        `;
+
+        recommendationBox.innerHTML = `
+            <h3>Recommended Strategy: ${result.recommendedStrategy}</h3>
+            <p><strong>Final Score:</strong>
+                ${Number(result.recommendedScore).toFixed(2)}%</p>
+            <p><strong>Workload:</strong> ${result.workloadName}</p>
+            <p>This strategy achieved the highest final performance score.</p>
+        `;
+
+        statusBox.textContent = "C++ comparison completed successfully.";
+
+    } catch (error) {
+        cardsBox.innerHTML = "";
+        metricsBox.innerHTML = "";
+        recommendationBox.textContent = "Unable to generate recommendation.";
+        statusBox.textContent = "Comparison Error: " + error.message;
+    }
+}
+
+
+/* ADAPTIVE ENGINE */
+
+async function runAdaptiveEngine() {
+    const workloadType =
+        document.getElementById("adaptiveWorkload").value;
+
+    const totalMemory =
+        Number(document.getElementById("adaptiveTotalMemory").value);
+
+    const cardsBox = document.getElementById("adaptiveCards");
+    const recommendationBox =
+        document.getElementById("adaptiveRecommendation");
+    const statusBox = document.getElementById("adaptiveStatus");
+
+    if (!Number.isInteger(totalMemory) || totalMemory <= 0) {
+        alert("Enter a valid positive whole number for total memory.");
+        return;
+    }
+
+    statusBox.textContent = "Running Adaptive Engine through C++...";
+    cardsBox.innerHTML = "<p>Calculating adaptive results...</p>";
+    recommendationBox.textContent = "Waiting for results...";
+
+    try {
+        const response = await fetch("/api/adaptive", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: workloadType, totalMemory })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Adaptive analysis failed.");
+        }
+
+        if (!Array.isArray(result.results) || result.results.length !== 3) {
+            throw new Error("Incomplete adaptive engine results.");
+        }
+        const rankedResults = [...result.results].sort(
+    (a, b) => Number(b.finalScore) - Number(a.finalScore)
+);
+
+const winningStrategy = rankedResults[0];
+const runnerUp = rankedResults[1];
+
+const scoreDifference =
+    Number(winningStrategy.finalScore) - Number(runnerUp.finalScore);
+    // Calculate individual contributions to the adaptive score
+const scoreBreakdown = {
+    utilization: Number(winningStrategy.utilizationScore) * 0.35,
+    fragmentation: Number(winningStrategy.fragmentationScore) * 0.35,
+    failure: Number(winningStrategy.failureScore) * 0.20,
+    completion: Number(winningStrategy.completionScore) * 0.10
+};
+
+const calculatedFinalScore =
+    scoreBreakdown.utilization +
+    scoreBreakdown.fragmentation +
+    scoreBreakdown.failure +
+    scoreBreakdown.completion;
+        // Adaptive Performance Chart
+if (window.adaptiveChartInstance) {
+    window.adaptiveChartInstance.destroy();
+}
+
+const adaptiveChartCanvas =
+    document.getElementById("adaptiveChart");
+
+window.adaptiveChartInstance = new Chart(adaptiveChartCanvas, {
+    type: "bar",
+
+    data: {
+        labels: result.results.map(strategy => strategy.strategyName),
+
+        datasets: [{
+            label: "Adaptive Performance Score (%)",
+            data: result.results.map(strategy =>
+                Number(strategy.finalScore)
+            ),
+            backgroundColor: [
+                "#3498db",
+                "#2ecc71",
+                "#f39c12"
+            ],
+            borderRadius: 8
+        }]
+    },
+
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        plugins: {
+            legend: {
+                display: false
+            },
+            datalabels: {
+                display: true,
+                anchor: "end",
+                align: "top",
+                color: "#ffffff",
+                font: {
+                    weight: "bold",
+                    size: 13
+                },
+                formatter: value => Number(value).toFixed(2) + "%"
+            }
+        },
+
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                title: {
+                    display: true,
+                    text: "Adaptive Score (%)"
+                }
+            }
+        }
+    }
+});
+        cardsBox.innerHTML = result.results.map(strategy => {
+            const utilization = Number(strategy.utilizationScore);
+            const fragmentation = Number(strategy.fragmentationScore);
+            const failure = Number(strategy.failureScore);
+            const completion = Number(strategy.completionScore);
+            const finalScore = Number(strategy.finalScore);
+
+            return `
+                <div class="adaptive-card">
+                    <h3>${strategy.strategyName}</h3>
+                    <p>Actual C++ Adaptive Score</p>
+                    <div class="adaptive-score">${finalScore.toFixed(2)}%</div>
+
+                    <div class="metric-label">
+                        <span>Utilization Score</span>
+                        <span>${utilization.toFixed(2)}%</span>
+                    </div>
+
+                    <div class="progress-track">
+                        <div class="progress-fill"
+                             style="width:${Math.max(0, Math.min(100, utilization))}%">
+                        </div>
+                    </div>
+
+                    <div class="metric-label">
+                        <span>Fragmentation Score</span>
+                        <span>${fragmentation.toFixed(2)}%</span>
+                    </div>
+
+                    <div class="progress-track">
+                        <div class="progress-fill"
+                             style="width:${Math.max(0, Math.min(100, fragmentation))}%">
+                        </div>
+                    </div>
+
+                    <div class="metric-label">
+                        <span>Failure Score</span>
+                        <span>${failure.toFixed(2)}%</span>
+                    </div>
+
+                    <div class="metric-label">
+                        <span>Completion Score</span>
+                        <span>${completion.toFixed(2)}%</span>
+                    </div>
+
+                    <div class="metric-label">
+                        <span>Completed Processes</span>
+                        <span>${strategy.completedProcesses}</span>
+                    </div>
+
+                    <div class="metric-label">
+                        <span>Allocation Failures</span>
+                        <span>${strategy.allocationFailures}</span>
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+       recommendationBox.innerHTML = `
+    <h2>🏆 Recommended Strategy: ${winningStrategy.strategyName}</h2>
+
+    <div class="adaptive-score">
+        ${Number(winningStrategy.finalScore).toFixed(2)}%
+    </div>
+
+    <p><strong>Score Advantage:</strong>
+        ${scoreDifference.toFixed(2)} percentage points over
+        ${runnerUp.strategyName}
+    </p>
+
+    <p><strong>Workload:</strong> ${result.workloadName}</p>
+    <p><strong>Total Memory:</strong> ${result.totalMemory} MB</p>
+    <p><strong>Total Processes:</strong> ${result.totalProcesses}</p>
+
+    <hr>
+    <h3>Adaptive Score Breakdown</h3>
+
+<div class="metric-label">
+    <span>Memory Utilization Contribution (35%)</span>
+    <strong>${scoreBreakdown.utilization.toFixed(2)}</strong>
+</div>
+
+<div class="metric-label">
+    <span>Fragmentation Contribution (35%)</span>
+    <strong>${scoreBreakdown.fragmentation.toFixed(2)}</strong>
+</div>
+
+<div class="metric-label">
+    <span>Failure Contribution (20%)</span>
+    <strong>${scoreBreakdown.failure.toFixed(2)}</strong>
+</div>
+
+<div class="metric-label">
+    <span>Completion Contribution (10%)</span>
+    <strong>${scoreBreakdown.completion.toFixed(2)}</strong>
+</div>
+
+<div class="metric-label">
+    <strong>Total Calculated Score</strong>
+    <strong>${calculatedFinalScore.toFixed(2)}%</strong>
+</div>
+    <h3>Why was this strategy selected?</h3>
+
+    <p>
+        ${winningStrategy.strategyName} achieved the highest adaptive
+        performance score among all three allocation strategies.
+    </p>
+
+    <p>
+        Its fragmentation score was
+        ${Number(winningStrategy.fragmentationScore).toFixed(2)}%,
+        compared with
+        ${Number(runnerUp.fragmentationScore).toFixed(2)}%
+        for ${runnerUp.strategyName}.
+    </p>
+
+    <p>
+        The recommendation is generated using actual C++ Adaptive
+        Engine results.
+    </p>
+`;
+
+        statusBox.textContent =
+            "C++ Adaptive Engine analysis completed successfully.";
+
+    } catch (error) {
+        cardsBox.innerHTML = "";
+        recommendationBox.textContent = "Unable to generate recommendation.";
+        statusBox.textContent = "Adaptive Engine Error: " + error.message;
+    }
+}
+
+
+/* CPU SCHEDULING - C++ BACKEND */
+
+async function fetchCPUSchedulingResults() {
+    const workloadType =
+        document.getElementById("cpuWorkload").value;
+
+    const totalMemory =
+        Number(document.getElementById("cpuTotalMemory").value);
+
+    if (!Number.isInteger(totalMemory) || totalMemory <= 0) {
+        throw new Error("Enter a valid positive memory value.");
+    }
+
+    const response = await fetch("/api/cpu-scheduling", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            type: workloadType,
+            totalMemory
+        })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+        throw new Error(data.message || "CPU Scheduling failed.");
+    }
+
+    if (!Array.isArray(data.results) || data.results.length !== 2) {
+        throw new Error("Invalid CPU Scheduling response.");
+    }
+
+    return data;
+}
+
+
+/* CPU SCHEDULER RESULT CARD */
+
+function renderCPUSchedulerCard(result) {
+    return `
+        <div class="scheduler-card">
+            <h3>${result.schedulerName}</h3>
+
+            <p><strong>Completed Processes:</strong>
+                ${result.completedProcesses}/${result.totalProcesses}</p>
+
+            <p><strong>CPU Utilization:</strong>
+                ${Number(result.cpuUtilization).toFixed(2)}%</p>
+
+            <p><strong>Average Waiting Time:</strong>
+                ${Number(result.averageWaitingTime).toFixed(2)}</p>
+
+            <p><strong>Average Turnaround Time:</strong>
+                ${Number(result.averageTurnaroundTime).toFixed(2)}</p>
+
+            <p><strong>Average Response Time:</strong>
+                ${Number(result.averageResponseTime).toFixed(2)}</p>
+
+            <p><strong>Context Switches:</strong>
+                ${result.contextSwitches}</p>
+
+            <p><strong>Total Simulation Time:</strong>
+                ${result.totalSimulationTime}</p>
+        </div>
+    `;
+}
+
+
+/* CPU SCHEDULING COMPARISON TABLE */
+
+function renderCPUSchedulingTable(results) {
+    const metrics = [
+        ["Completed Processes", "completedProcesses"],
+        ["Total Simulation Time", "totalSimulationTime"],
+        ["Context Switches", "contextSwitches"],
+        ["Average Waiting Time", "averageWaitingTime"],
+        ["Average Turnaround Time", "averageTurnaroundTime"],
+        ["Average Response Time", "averageResponseTime"],
+        ["CPU Utilization (%)", "cpuUtilization"]
+    ];
+
+    let html = `
+        <div style="overflow-x:auto">
+        <table class="metrics-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>FCFS</th>
+                    <th>Priority Scheduling</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    metrics.forEach(([label, key]) => {
+        const fcfs = results[0][key];
+        const priority = results[1][key];
+
+        const format = value =>
+            typeof value === "number" ? value.toFixed(2) : value;
+
+        html += `
+            <tr>
+                <td>${label}</td>
+                <td>${format(fcfs)}</td>
+                <td>${format(priority)}</td>
+            </tr>
+        `;
+    });
+
+    html += "</tbody></table></div>";
+
+    document.getElementById("schedulerResults").innerHTML = html;
+}
+
+
+/* RUN ONE SCHEDULER */
+
+async function runCPUScheduler(type) {
+    const status = document.getElementById("cpuStatus");
+
+    try {
+        status.textContent = "Running CPU Scheduling through C++...";
+
+        const data = await fetchCPUSchedulingResults();
+
+        const selectedResult = data.results.find(result =>
+            type === "FCFS"
+                ? result.schedulerName === "FCFS"
+                : result.schedulerName === "Priority Scheduling"
+        );
+
+        if (!selectedResult) {
+            throw new Error("Requested scheduler result not found.");
+        }
+
+        document.getElementById("cpuResultCards").innerHTML =
+            renderCPUSchedulerCard(selectedResult);
+
+        renderCPUSchedulingTable(data.results);
+
+        status.textContent =
+            selectedResult.schedulerName +
+            " results loaded successfully from the C++ backend.";
+
+    } catch (error) {
+        status.textContent = "Error: " + error.message;
+        document.getElementById("cpuResultCards").innerHTML = "";
+        document.getElementById("schedulerResults").textContent =
+            "Unable to load CPU Scheduling results.";
+    }
+}
+
+
+/* COMPARE BOTH SCHEDULERS */
+
+async function compareCPUSchedulers() {
+    const status = document.getElementById("cpuStatus");
+
+    try {
+        status.textContent = "Comparing both CPU schedulers...";
+
+        const data = await fetchCPUSchedulingResults();
+
+        document.getElementById("cpuResultCards").innerHTML =
+            data.results.map(renderCPUSchedulerCard).join("");
+
+        renderCPUSchedulingTable(data.results);
+
+        status.textContent =
+            "FCFS and Priority Scheduling comparison loaded successfully from the C++ backend.";
+
+    } catch (error) {
+        status.textContent = "Error: " + error.message;
+        document.getElementById("cpuResultCards").innerHTML = "";
+        document.getElementById("schedulerResults").textContent =
+            "Unable to load CPU Scheduling comparison.";
+    }
+}
+let reportCharts = {};
+
+
+async function generatePerformanceReport() {
+    const workloadType =
+        document.getElementById("reportWorkload").value;
+
+    const totalMemory =
+        Number(document.getElementById("reportMemory").value);
+
+    const statusBox =
+        document.getElementById("reportStatus");
+
+    const reportResults =
+        document.getElementById("reportResults");
+
+    if (!Number.isInteger(totalMemory) || totalMemory <= 0) {
+        statusBox.textContent = "Enter a valid positive memory value.";
+        return;
+    }
+
+    statusBox.textContent = "Generating report using the C++ engine...";
+    reportResults.style.display = "none";
+
+    try {
+        // Fetch actual strategy comparison results.
+        const comparisonResponse = await fetch("/api/comparison", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                type: workloadType,
+                totalMemory
+            })
+        });
+
+        const comparison = await comparisonResponse.json();
+
+        if (!comparisonResponse.ok || !comparison.success) {
+            throw new Error(
+                comparison.message || "Strategy comparison failed."
+            );
+        }
+
+        if (!Array.isArray(comparison.results) ||
+            comparison.results.length !== 3) {
+            throw new Error("Incomplete strategy results.");
+        }
+
+        // Fetch actual CPU scheduling results.
+        const cpuResponse = await fetch("/api/cpu-scheduling", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                type: workloadType,
+                totalMemory
+            })
+        });
+
+        const cpu = await cpuResponse.json();
+
+        if (!cpuResponse.ok || !cpu.success) {
+            throw new Error(
+                cpu.message || "CPU Scheduling failed."
+            );
+        }
+
+        if (!Array.isArray(cpu.results) || cpu.results.length !== 2) {
+            throw new Error("Incomplete CPU scheduling results.");
+        }
+
+        const strategies = comparison.results;
+        const schedulers = cpu.results;
+
+        const format = value => {
+            const number = Number(value);
+            return Number.isFinite(number) ? number.toFixed(2) : "N/A";
+        };
+
+        // Memory overview cards.
+        document.getElementById("reportSummaryCards").innerHTML = `
+            <div class="card">
+                <p>Workload</p>
+                <h2>${comparison.workloadName}</h2>
+            </div>
+
+            <div class="card">
+                <p>Total Memory</p>
+                <h2>${comparison.totalMemory} MB</h2>
+            </div>
+
+            <div class="card">
+                <p>Total Processes</p>
+                <h2>${comparison.totalProcesses}</h2>
+            </div>
+
+            <div class="card">
+                <p>Recommended Strategy</p>
+                <h2>${comparison.recommendedStrategy}</h2>
+            </div>
+        `;
+
+        // Strategy comparison table.
+        const strategyRows = strategies.map(strategy => `
+            <tr>
+                <td>${strategy.strategyName}</td>
+                <td>${format(strategy.averageUtilization)}%</td>
+                <td>${format(strategy.averageExternalFragmentation)}%</td>
+                <td>${strategy.allocationFailures}</td>
+                <td>${strategy.completedProcesses}</td>
+                <td>${format(strategy.finalScore)}%</td>
+            </tr>
+        `).join("");
+
+        document.getElementById("reportStrategyResults").innerHTML = `
+            <div style="overflow-x:auto">
+                <table class="metrics-table">
+                    <thead>
+                        <tr>
+                            <th>Strategy</th>
+                            <th>Utilization</th>
+                            <th>Fragmentation</th>
+                            <th>Failures</th>
+                            <th>Completed</th>
+                            <th>Final Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>${strategyRows}</tbody>
+                </table>
+            </div>
+        `;
+
+        // CPU scheduling comparison table.
+        const cpuRows = schedulers.map(result => `
+            <tr>
+                <td>${result.schedulerName}</td>
+                <td>${result.completedProcesses}/${result.totalProcesses}</td>
+                <td>${format(result.averageWaitingTime)}</td>
+                <td>${format(result.averageTurnaroundTime)}</td>
+                <td>${format(result.averageResponseTime)}</td>
+                <td>${format(result.cpuUtilization)}%</td>
+                <td>${result.contextSwitches}</td>
+            </tr>
+        `).join("");
+
+        document.getElementById("reportCPUResults").innerHTML = `
+            <div style="overflow-x:auto">
+                <table class="metrics-table">
+                    <thead>
+                        <tr>
+                            <th>Scheduler</th>
+                            <th>Completed</th>
+                            <th>Waiting Time</th>
+                            <th>Turnaround Time</th>
+                            <th>Response Time</th>
+                            <th>CPU Utilization</th>
+                            <th>Context Switches</th>
+                        </tr>
+                    </thead>
+                    <tbody>${cpuRows}</tbody>
+                </table>
+            </div>
+        `;
+
+        // Automatic report summary.
+        document.getElementById("reportConclusion").innerHTML = `
+            <div class="recommendation">
+                <h3>Performance Report Generated</h3>
+
+                <p><strong>Workload:</strong> ${comparison.workloadName}</p>
+                <p><strong>Total Memory:</strong> ${comparison.totalMemory} MB</p>
+                <p><strong>Total Processes:</strong> ${comparison.totalProcesses}</p>
+
+                <p><strong>Best Memory Allocation Strategy:</strong>
+                    ${comparison.recommendedStrategy}</p>
+
+                <p><strong>Strategy Performance Score:</strong>
+                    ${format(comparison.recommendedScore)}%</p>
+
+                <p>
+                    This report contains actual results returned by
+                    the MEMORYX C++ strategy comparison and CPU
+                    scheduling engines.
+                </p>
+            </div>
+        `;
+
+        // Show report before drawing charts.
+        reportResults.style.display = "block";
+
+        // Destroy previous charts before creating new ones.
+        Object.values(reportCharts).forEach(chart => {
+            if (chart) chart.destroy();
+        });
+
+        reportCharts = {};
+
+        const strategyLabels = strategies.map(s => s.strategyName);
+
+        // Common styling for percentage-based memory charts.
+        const percentageChartOptions = {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: "#E2E8F0",
+                        font: {
+                            size: 13,
+                            weight: "bold"
+                        }
+                    }
+                },
+                tooltip: {
+                    enabled: true,
+                    backgroundColor: "#0F172A",
+                    titleColor: "#FFFFFF",
+                    bodyColor: "#E2E8F0",
+                    borderColor: "#38BDF8",
+                    borderWidth: 1
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: "#E2E8F0"
+                    },
+                    grid: {
+                        color: "rgba(148, 163, 184, 0.10)"
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        color: "#E2E8F0",
+                        callback: value => value + "%"
+                    },
+                    grid: {
+                        color: "rgba(148, 163, 184, 0.20)"
+                    }
+                }
+            }
+        };
+
+     // Common settings for numerical labels above bars.
+const dataLabelSettings = {
+    display: true,
+    anchor: "end",
+    align: "top",
+    offset: 4,
+    color: "#FFFFFF",
+    font: {
+        size: 12,
+        weight: "bold"
+    },
+    formatter: value => Number(value).toFixed(2),
+    clamp: true
+};
+
+// Chart 1: Memory Utilization.
+reportCharts.utilization = new Chart(
+    document.getElementById("utilizationChart"),
+    {
+        type: "bar",
+        data: {
+            labels: strategyLabels,
+            datasets: [{
+                label: "Memory Utilization (%)",
+                data: strategies.map(s =>
+                    Number(s.averageUtilization)
+                )
+            }]
+        },
+        options: {
+            ...percentageChartOptions,
+            plugins: {
+                ...percentageChartOptions.plugins,
+                datalabels: dataLabelSettings
+            }
+        }
+    }
+);
+
+// Chart 2: External Fragmentation.
+reportCharts.fragmentation = new Chart(
+    document.getElementById("fragmentationChart"),
+    {
+        type: "bar",
+        data: {
+            labels: strategyLabels,
+            datasets: [{
+                label: "External Fragmentation (%)",
+                data: strategies.map(s =>
+                    Number(s.averageExternalFragmentation)
+                )
+            }]
+        },
+        options: {
+            ...percentageChartOptions,
+            plugins: {
+                ...percentageChartOptions.plugins,
+                datalabels: dataLabelSettings
+            }
+        }
+    }
+);
+
+// Chart 3: Final Performance Score.
+reportCharts.score = new Chart(
+    document.getElementById("scoreChart"),
+    {
+        type: "bar",
+        data: {
+            labels: strategyLabels,
+            datasets: [{
+                label: "Final Performance Score (%)",
+                data: strategies.map(s =>
+                    Number(s.finalScore)
+                )
+            }]
+        },
+        options: {
+            ...percentageChartOptions,
+            plugins: {
+                ...percentageChartOptions.plugins,
+                datalabels: dataLabelSettings
+            }
+        }
+    }
+);
+
+// Chart 4: FCFS vs Priority Scheduling.
+reportCharts.cpu = new Chart(
+    document.getElementById("cpuChart"),
+    {
+        type: "bar",
+        data: {
+            labels: schedulers.map(s => s.schedulerName),
+            datasets: [
+                {
+                    label: "Waiting Time",
+                    data: schedulers.map(s =>
+                        Number(s.averageWaitingTime)
+                    )
+                },
+                {
+                    label: "Turnaround Time",
+                    data: schedulers.map(s =>
+                        Number(s.averageTurnaroundTime)
+                    )
+                },
+                {
+                    label: "Response Time",
+                    data: schedulers.map(s =>
+                        Number(s.averageResponseTime)
+                    )
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: "#E2E8F0",
+                        font: {
+                            size: 13,
+                            weight: "bold"
+                        }
+                    }
+                },
+                tooltip: {
+                    enabled: true,
+                    backgroundColor: "#0F172A",
+                    titleColor: "#FFFFFF",
+                    bodyColor: "#E2E8F0",
+                    borderColor: "#38BDF8",
+                    borderWidth: 1
+                },
+                datalabels: dataLabelSettings
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: "#E2E8F0"
+                    },
+                    grid: {
+                        color: "rgba(148, 163, 184, 0.10)"
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: "#E2E8F0",
+                        callback: value => value
+                    },
+                    grid: {
+                        color: "rgba(148, 163, 184, 0.20)"
+                    },
+                    title: {
+                        display: true,
+                        text: "Time Units",
+                        color: "#E2E8F0"
+                    }
+                }
+            }
+        }
+    }
+);
+
+statusBox.textContent =
+    "Performance report and charts generated successfully using the C++ backend.";
+
+} catch (error) {
+    reportResults.style.display = "none";
+    statusBox.textContent = "Report Error: " + error.message;
+}
+}
+// ============================================================
+// EXPORT PERFORMANCE REPORT AS PDF
+// ============================================================
+
+function exportPerformanceReportPDF() {
+
+    // Check whether a report has been generated.
+    const reportResults = document.getElementById("reportResults");
+
+    if (reportResults.style.display === "none" ||
+        !document.getElementById("reportSummaryCards").innerHTML.trim()) {
+
+        alert("Please generate a performance report before exporting.");
+        return;
+    }
+
+    try {
+
+       if (!window.jspdf || typeof window.jspdf.jsPDF !== "function") {
+        throw new Error("jsPDF library is not available. Please refresh the page.");
+    }
+
+    const jsPDF = window.jspdf.jsPDF;
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    if (typeof pdf.autoTable !== "function") {
+        throw new Error("PDF AutoTable plugin is not loaded.");
+    }
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        const margin = 15;
+        const contentWidth = pageWidth - margin * 2;
+
+        // ----------------------------------------------------
+        // PAGE 1: REPORT OVERVIEW
+        // ----------------------------------------------------
+
+        pdf.setFillColor(15, 23, 42);
+        pdf.rect(0, 0, pageWidth, 42, "F");
+
+        pdf.setTextColor(56, 189, 248);
+        pdf.setFontSize(24);
+        pdf.setFont("helvetica", "bold");
+
+        pdf.text("MEMORYX", margin, 18);
+
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFontSize(13);
+
+        pdf.text(
+            "Adaptive Memory Allocation & Fragmentation Analyzer",
+            margin,
+            28
+        );
+
+        pdf.setFontSize(10);
+        pdf.text("Performance Analysis Report", margin, 36);
+
+        pdf.setTextColor(30, 41, 59);
+        pdf.setFontSize(10);
+
+        pdf.text(
+            "Generated: " + new Date().toLocaleString(),
+            margin,
+            52
+        );
+
+        // Workload information.
+        pdf.setFontSize(15);
+        pdf.setFont("helvetica", "bold");
+
+        pdf.text("Performance Overview", margin, 66);
+
+        const summaryCards =
+            document.getElementById("reportSummaryCards");
+
+        const summaryValues = Array.from(
+            summaryCards.querySelectorAll(".card")
+        ).map(card => ({
+            label: card.querySelector("p")?.textContent || "",
+            value: card.querySelector("h2")?.textContent || ""
+        }));
+
+        pdf.autoTable({
+            startY: 73,
+            head: [["Parameter", "Value"]],
+            body: summaryValues.map(item => [
+                item.label,
+                item.value
+            ]),
+            theme: "grid",
+            margin: { left: margin, right: margin },
+            styles: {
+                fontSize: 10,
+                cellPadding: 4
+            },
+            headStyles: {
+                fillColor: [30, 64, 100]
+            }
+        });
+
+        // Strategy comparison table.
+        let nextY = pdf.lastAutoTable.finalY + 12;
+
+        pdf.setFontSize(15);
+        pdf.text("Memory Strategy Comparison", margin, nextY);
+
+        pdf.autoTable({
+            html: "#reportStrategyResults table",
+            startY: nextY + 6,
+            theme: "grid",
+            margin: { left: margin, right: margin },
+            styles: {
+                fontSize: 8,
+                cellPadding: 2.5
+            },
+            headStyles: {
+                fillColor: [30, 64, 100]
+            }
+        });
+
+        // ----------------------------------------------------
+        // CPU SCHEDULING TABLE
+        // ----------------------------------------------------
+
+        pdf.addPage();
+
+        pdf.setFontSize(17);
+        pdf.setTextColor(30, 41, 59);
+
+        pdf.text("CPU Scheduling Analysis", margin, 20);
+
+        pdf.autoTable({
+            html: "#reportCPUResults table",
+            startY: 28,
+            theme: "grid",
+            margin: { left: margin, right: margin },
+            styles: {
+                fontSize: 8,
+                cellPadding: 3
+            },
+            headStyles: {
+                fillColor: [30, 64, 100]
+            }
+        });
+
+        // ----------------------------------------------------
+        // PERFORMANCE SUMMARY
+        // ----------------------------------------------------
+
+        let conclusionY = pdf.lastAutoTable.finalY + 15;
+
+        const conclusion =
+            document.getElementById("reportConclusion");
+
+        const conclusionText = conclusion.innerText;
+
+        pdf.setFontSize(15);
+        pdf.setFont("helvetica", "bold");
+
+        pdf.text("Report Conclusion", margin, conclusionY);
+
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(10);
+
+        const conclusionLines = pdf.splitTextToSize(
+            conclusionText,
+            contentWidth
+        );
+
+        pdf.text(
+            conclusionLines,
+            margin,
+            conclusionY + 8
+        );
+
+        // ----------------------------------------------------
+        // PERFORMANCE CHARTS
+        // ----------------------------------------------------
+
+        const chartIds = [
+            {
+                id: "utilizationChart",
+                title: "Memory Utilization"
+            },
+            {
+                id: "fragmentationChart",
+                title: "External Fragmentation"
+            },
+            {
+                id: "scoreChart",
+                title: "Final Performance Score"
+            },
+            {
+                id: "cpuChart",
+                title: "CPU Scheduling Comparison"
+            }
+        ];
+
+        chartIds.forEach(chart => {
+
+            const canvas = document.getElementById(chart.id);
+
+            if (!canvas) return;
+
+            pdf.addPage();
+
+            pdf.setFontSize(17);
+            pdf.setTextColor(30, 41, 59);
+
+            pdf.text(chart.title, margin, 22);
+
+            const imageData = canvas.toDataURL("image/png");
+
+            const imageWidth = contentWidth;
+            const imageHeight = 105;
+
+            pdf.addImage(
+                imageData,
+                "PNG",
+                margin,
+                32,
+                imageWidth,
+                imageHeight
+            );
+        });
+
+        // ----------------------------------------------------
+        // PAGE NUMBERS
+        // ----------------------------------------------------
+
+        const totalPages = pdf.internal.getNumberOfPages();
+
+        for (let page = 1; page <= totalPages; page++) {
+
+            pdf.setPage(page);
+
+            pdf.setFontSize(9);
+            pdf.setTextColor(100, 116, 139);
+
+            pdf.text(
+                "MEMORYX | Performance Report",
+                margin,
+                pageHeight - 8
+            );
+
+            pdf.text(
+                "Page " + page + " of " + totalPages,
+                pageWidth - margin,
+                pageHeight - 8,
+                { align: "right" }
+            );
+        }
+
+        // Download PDF.
+        pdf.save("MEMORYX_Performance_Report.pdf");
+
+    } catch (error) {
+
+        console.error("PDF Export Error:", error);
+
+        alert("Unable to generate PDF: " + error.message);
+    }
+}
+</script>
+
+</body>
+</html>
