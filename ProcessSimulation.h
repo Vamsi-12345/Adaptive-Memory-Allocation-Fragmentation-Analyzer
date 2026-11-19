@@ -68,7 +68,9 @@ public:
     );
 
     void displayWorkload() const;
-
+        std::vector<CPUSchedulingResult> getCPUSchedulingResults(
+        int totalMemory
+    );
     void executeWorkload(
         int totalMemory,
         AllocationStrategy* strategy
