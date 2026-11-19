@@ -106,7 +106,7 @@ int main()
 
     // One manager owns the selected workload for the whole application.
     WorkloadManager workloadManager;
-
+    
     if (!workloadManager.hasWorkload())
     {
         cout << "\nNo saved workload was found.\n";
