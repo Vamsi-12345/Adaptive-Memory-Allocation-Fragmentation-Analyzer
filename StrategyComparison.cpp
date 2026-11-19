@@ -437,3 +437,48 @@ void StrategyComparison::giveSuggestion(
     cout << "Allocation failures: "
          << bestResult->allocationFailures << '\n';
 }
+// Return all three strategy results to the GUI backend.
+vector<StrategyResult> StrategyComparison::getComparisonResults(
+    int totalMemory,
+    const vector<Process>& processes)
+{
+    vector<StrategyResult> results;
+
+    if (totalMemory <= 0 || processes.empty())
+    {
+        return results;
+    }
+
+    FirstFit firstFit;
+    BestFit bestFit;
+    WorstFit worstFit;
+
+    results.push_back(
+        runStrategy(
+            totalMemory,
+            processes,
+            &firstFit,
+            "First Fit"
+        )
+    );
+
+    results.push_back(
+        runStrategy(
+            totalMemory,
+            processes,
+            &bestFit,
+            "Best Fit"
+        )
+    );
+
+    results.push_back(
+        runStrategy(
+            totalMemory,
+            processes,
+            &worstFit,
+            "Worst Fit"
+        )
+    );
+
+    return results;
+}
