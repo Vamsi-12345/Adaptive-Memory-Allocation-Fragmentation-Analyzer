@@ -250,6 +250,37 @@ void AdaptiveEngine::displayResult(
          << result.finalScore << " / 100\n";
 }
 
+
+vector<AdaptiveResult> AdaptiveEngine::getAdaptiveResults(
+    int totalMemory,
+    const vector<Process>& processes)
+{
+    vector<AdaptiveResult> results;
+
+    if (totalMemory <= 0 || processes.empty())
+    {
+        return results;
+    }
+
+    FirstFit firstFit;
+    BestFit bestFit;
+    WorstFit worstFit;
+
+    results.push_back(
+        evaluateStrategy(
+            totalMemory, processes, &firstFit, "First Fit"));
+
+    results.push_back(
+        evaluateStrategy(
+            totalMemory, processes, &bestFit, "Best Fit"));
+
+    results.push_back(
+        evaluateStrategy(
+            totalMemory, processes, &worstFit, "Worst Fit"));
+
+    return results;
+}
+
 void AdaptiveEngine::run(
     int totalMemory,
     const vector<Process>& processes)
@@ -266,23 +297,8 @@ void AdaptiveEngine::run(
         return;
     }
 
-    FirstFit firstFit;
-    BestFit bestFit;
-    WorstFit worstFit;
-
-    vector<AdaptiveResult> results;
-
-    results.push_back(
-        evaluateStrategy(
-            totalMemory, processes, &firstFit, "First Fit"));
-
-    results.push_back(
-        evaluateStrategy(
-            totalMemory, processes, &bestFit, "Best Fit"));
-
-    results.push_back(
-        evaluateStrategy(
-            totalMemory, processes, &worstFit, "Worst Fit"));
+    vector<AdaptiveResult> results =
+        getAdaptiveResults(totalMemory, processes);
 
     cout << "\n========================================\n";
     cout << "       ADAPTIVE STRATEGY ENGINE\n";
