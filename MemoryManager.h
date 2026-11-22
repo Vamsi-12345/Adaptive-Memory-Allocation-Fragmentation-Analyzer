@@ -1,44 +1,30 @@
-#ifndef MEMORYMANAGER_H
-#define MEMORYMANAGER_H
+#ifndef PROCESSMANAGER_H
+#define PROCESSMANAGER_H
 
 #include <vector>
-#include "MemoryBlock.h"
-#include "AllocationStrategy.h"
+#include "Process.h"
 
-class MemoryManager
+class ProcessManager
 {
 private:
-    int totalMemory;
-    std::vector<MemoryBlock> blocks;
-    AllocationStrategy* strategy;
-
-    int allocationFailures;
+    std::vector<Process> processes;
 
 public:
-    MemoryManager(
-        int memorySize,
-        AllocationStrategy* allocationStrategy
-    );
+    ProcessManager();
 
-    void displayMemory() const;
+    void addProcess(const Process& process);
 
-    bool canAllocate(int memoryRequired) const;
+    bool removeProcess(int processId);
 
-    bool allocate(
-        int processId,
-        int memoryRequired
-    );
+    Process* getProcess(int processId);
 
-    bool deallocate(int processId);
+    const std::vector<Process>& getProcesses() const;
 
-    void mergeFreeBlocks();
+    void displayProcesses() const;
 
-    // Functions for strategy comparison
-    int getTotalMemory() const;
+    void clearProcesses();
 
-    const std::vector<MemoryBlock>& getBlocks() const;
-
-    int getAllocationFailures() const;
+    int getProcessCount() const;
 };
 
 #endif
