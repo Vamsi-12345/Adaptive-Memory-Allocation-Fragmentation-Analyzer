@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
+
 BASE_DIR = Path(__file__).resolve().parent
 BACKEND = BASE_DIR / "gui_backend.exe"
 GUI_FILE = BASE_DIR / "MEMORYX_GUI.html"
@@ -41,15 +42,18 @@ class MemoryXHandler(SimpleHTTPRequestHandler):
                 "Mixed",
                 "Saved"
             ]
-                        # --------------------------------
+
+            # =====================================
             # SAVE CUSTOM WORKLOAD ENDPOINT
-            # --------------------------------
+            # =====================================
 
             if self.path == "/api/save-workload":
 
                 workload_name = request.get("name")
                 processes = request.get("processes")
+                history = request.get("history", [])
 
+                # Validate workload name
                 if (
                     not isinstance(workload_name, str)
                     or not workload_name.strip()
@@ -58,12 +62,26 @@ class MemoryXHandler(SimpleHTTPRequestHandler):
                 ):
                     raise ValueError("Invalid workload name")
 
+                # Validate processes list
                 if (
                     not isinstance(processes, list)
                     or len(processes) == 0
                     or len(processes) > 1000
                 ):
-                    raise ValueError("Enter between 1 and 1000 processes")
+                    raise ValueError(
+                        "Enter between 1 and 1000 processes"
+                    )
+
+                # Validate history list
+                if not isinstance(history, list):
+                    raise ValueError("Invalid event history")
+
+                if len(history) > 10000:
+                    raise ValueError("Too many events")
+
+                # =================================
+                # VALIDATE PROCESSES
+                # =================================
 
                 used_ids = set()
                 validated_processes = []
@@ -74,8 +92,11 @@ class MemoryXHandler(SimpleHTTPRequestHandler):
                         raise ValueError("Invalid process data")
 
                     fields = [
-                        "pid", "memory", "arrival",
-                        "execution", "priority"
+                        "pid",
+                        "memory",
+                        "arrival",
+                        "execution",
+                        "priority"
                     ]
 
                     if any(
@@ -83,7 +104,9 @@ class MemoryXHandler(SimpleHTTPRequestHandler):
                         or not isinstance(process.get(field), int)
                         for field in fields
                     ):
-                        raise ValueError("Process values must be integers")
+                        raise ValueError(
+                            "Process values must be integers"
+                        )
 
                     pid = process["pid"]
                     memory = process["memory"]
@@ -109,10 +132,57 @@ class MemoryXHandler(SimpleHTTPRequestHandler):
                         (pid, memory, arrival, execution, priority)
                     )
 
-                workload_file = BASE_DIR / "memoryx_workload.txt"
-                temporary_file = BASE_DIR / "memoryx_workload.tmp"
+                # =================================
+                # VALIDATE EVENT HISTORY
+                # =================================
 
-                with temporary_file.open("w", encoding="utf-8") as file:
+                for event in history:
+
+                    if not isinstance(event, dict):
+                        raise ValueError("Invalid event")
+
+                    action = event.get("action")
+
+                    if action not in (
+                        "Allocation",
+                        "Deallocation"
+                    ):
+                        raise ValueError("Invalid event action")
+
+                    pid = event.get("pid")
+
+                    if (
+                        isinstance(pid, bool)
+                        or not isinstance(pid, int)
+                        or pid not in used_ids
+                    ):
+                        raise ValueError("Invalid event PID")
+
+                    if action == "Allocation":
+
+                        memory = event.get("memory")
+
+                        if (
+                            isinstance(memory, bool)
+                            or not isinstance(memory, int)
+                            or memory <= 0
+                        ):
+                            raise ValueError(
+                                "Invalid allocation memory"
+                            )
+
+                # =================================
+                # SAVE WORKLOAD FILE
+                # =================================
+
+                workload_file = BASE_DIR / "memoryx_workload.txt"
+                workload_temp = BASE_DIR / "memoryx_workload.tmp"
+
+                with workload_temp.open(
+                    "w",
+                    encoding="utf-8"
+                ) as file:
+
                     file.write("MEMORYX_WORKLOAD_V1\n")
                     file.write(workload_name.strip() + "\n")
                     file.write(str(len(validated_processes)) + "\n")
@@ -122,7 +192,54 @@ class MemoryXHandler(SimpleHTTPRequestHandler):
                             "{} {} {} {} {}\n".format(*process)
                         )
 
-                temporary_file.replace(workload_file)
+                workload_temp.replace(workload_file)
+
+                # =================================
+                # SAVE JSON EVENT HISTORY
+                # =================================
+
+                history_file = BASE_DIR / "memoryx_history.json"
+                history_temp = BASE_DIR / "memoryx_history.json.tmp"
+
+                with history_temp.open(
+                    "w",
+                    encoding="utf-8"
+                ) as file:
+
+                    json.dump(history, file, indent=4)
+
+                history_temp.replace(history_file)
+
+                # =================================
+                # SAVE TEXT EVENT HISTORY FOR C++
+                # =================================
+
+                history_text_file = BASE_DIR / "memoryx_history.txt"
+                history_text_temp = BASE_DIR / "memoryx_history.txt.tmp"
+
+                with history_text_temp.open(
+                    "w",
+                    encoding="utf-8"
+                ) as file:
+
+                    file.write("MEMORYX_HISTORY_V1\n")
+                    file.write(str(len(history)) + "\n")
+
+                    for event in history:
+
+                        action = event["action"]
+                        pid = event["pid"]
+                        memory = event.get("memory", 0)
+
+                        file.write(
+                            f"{action} {pid} {memory}\n"
+                        )
+
+                history_text_temp.replace(history_text_file)
+
+                # =================================
+                # SUCCESS RESPONSE
+                # =================================
 
                 self.send_json(200, {
                     "success": True,
@@ -131,10 +248,12 @@ class MemoryXHandler(SimpleHTTPRequestHandler):
                         + workload_name.strip()
                     )
                 })
+
                 return
-            # --------------------------------
+
+            # =====================================
             # WORKLOAD ENDPOINT
-            # --------------------------------
+            # =====================================
 
             if self.path == "/api/workload":
 
@@ -148,9 +267,9 @@ class MemoryXHandler(SimpleHTTPRequestHandler):
                     workload_type
                 ]
 
-            # --------------------------------
+            # =====================================
             # MEMORY SIMULATION ENDPOINT
-            # --------------------------------
+            # =====================================
 
             elif self.path == "/api/simulation":
 
@@ -184,9 +303,9 @@ class MemoryXHandler(SimpleHTTPRequestHandler):
                     strategy
                 ]
 
-            # --------------------------------
+            # =====================================
             # STRATEGY COMPARISON ENDPOINT
-            # --------------------------------
+            # =====================================
 
             elif self.path == "/api/comparison":
 
@@ -210,9 +329,9 @@ class MemoryXHandler(SimpleHTTPRequestHandler):
                     "COMPARE"
                 ]
 
-            # --------------------------------
+            # =====================================
             # ADAPTIVE ENGINE ENDPOINT
-            # --------------------------------
+            # =====================================
 
             elif self.path == "/api/adaptive":
 
@@ -236,37 +355,9 @@ class MemoryXHandler(SimpleHTTPRequestHandler):
                     "ADAPTIVE"
                 ]
 
-           
-            # --------------------------------
+            # =====================================
             # CPU SCHEDULING ENDPOINT
-            # --------------------------------
-
-            elif self.path == "/api/cpu-scheduling":
-
-                workload_type = request.get("type")
-                total_memory = request.get("totalMemory")
-
-                if workload_type not in allowed_workloads:
-                    raise ValueError("Invalid workload type")
-
-                if (
-                    isinstance(total_memory, bool)
-                    or not isinstance(total_memory, int)
-                    or total_memory <= 0
-                ):
-                    raise ValueError("Invalid total memory")
-
-                command = [
-                    str(BACKEND),
-                    workload_type,
-                    str(total_memory),
-                    "CPU"
-                ]
-
-           
-            # --------------------------------
-            # CPU SCHEDULING ENDPOINT
-            # --------------------------------
+            # =====================================
 
             elif self.path == "/api/cpu-scheduling":
 
@@ -291,16 +382,17 @@ class MemoryXHandler(SimpleHTTPRequestHandler):
                 ]
 
             else:
+
                 self.send_json(404, {
                     "success": False,
                     "message": "Endpoint not found"
                 })
+
                 return
 
-
-            # --------------------------------
+            # =====================================
             # RUN C++ BACKEND
-            # --------------------------------
+            # =====================================
 
             result = subprocess.run(
                 command,
@@ -333,12 +425,20 @@ class MemoryXHandler(SimpleHTTPRequestHandler):
             })
 
 
+# =====================================
+# CHECK REQUIRED FILES
+# =====================================
+
 if not BACKEND.exists():
     raise FileNotFoundError("gui_backend.exe not found")
 
 if not GUI_FILE.exists():
     raise FileNotFoundError("MEMORYX_GUI.html not found")
 
+
+# =====================================
+# START SERVER
+# =====================================
 
 server = HTTPServer(
     ("127.0.0.1", 8000),
