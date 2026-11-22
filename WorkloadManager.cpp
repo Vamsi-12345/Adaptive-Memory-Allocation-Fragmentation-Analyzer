@@ -8,6 +8,23 @@
 #include <set>
 
 using namespace std;
+bool WorkloadManager::loadBasicWorkload()
+{
+    createBasicWorkload();
+    return true;
+}
+
+bool WorkloadManager::loadFragmentationWorkload()
+{
+    createFragmentationWorkload();
+    return true;
+}
+
+bool WorkloadManager::loadMixedWorkload()
+{
+    createMixedWorkload();
+    return true;
+}
 
 WorkloadManager::WorkloadManager()
 {
@@ -273,6 +290,10 @@ const vector<Process>& WorkloadManager::getProcesses() const
 {
     return processes;
 }
+const vector<string>& WorkloadManager::getEventHistory() const
+{
+    return eventHistory;
+}
 
 vector<Process> WorkloadManager::getWorkloadCopy() const
 {
@@ -383,7 +404,14 @@ bool WorkloadManager::loadFromFile()
 
 bool WorkloadManager::loadSavedWorkload()
 {
-    return loadFromFile();
+    if (!loadFromFile())
+    {
+        return false;
+    }
+
+    loadEventHistory();
+
+    return true;
 }
 
 void WorkloadManager::displayWorkload() const
@@ -424,4 +452,42 @@ void WorkloadManager::displayWorkload() const
 
     cout << "============================================================\n";
 }
+bool WorkloadManager::loadEventHistory()
+{
+    eventHistory.clear();
 
+    ifstream file("memoryx_history.txt");
+
+    if (!file)
+    {
+        return false;
+    }
+
+    string signature;
+    size_t count;
+
+    if (!getline(file, signature) ||
+        signature != "MEMORYX_HISTORY_V1" ||
+        !(file >> count) ||
+        count > 10000)
+    {
+        return false;
+    }
+
+    file.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    for (size_t i = 0; i < count; i++)
+    {
+        string event;
+
+        if (!getline(file, event))
+        {
+            eventHistory.clear();
+            return false;
+        }
+
+        eventHistory.push_back(event);
+    }
+
+    return true;
+}
