@@ -36,7 +36,8 @@ private:
         int totalMemory,
         const std::vector<Process>& processes,
         AllocationStrategy* strategy,
-        const std::string& strategyName
+        const std::string& strategyName,
+        const std::vector<std::string>& eventHistory
     );
 
     void displayResult(
@@ -47,12 +48,16 @@ public:
     // New function for GUI integration
     std::vector<AdaptiveResult> getAdaptiveResults(
         int totalMemory,
-        const std::vector<Process>& processes
+        const std::vector<Process>& processes,
+        const std::vector<std::string>& eventHistory =
+            std::vector<std::string>()
     );
 
     void run(
         int totalMemory,
-        const std::vector<Process>& processes
+        const std::vector<Process>& processes,
+        const std::vector<std::string>& eventHistory =
+            std::vector<std::string>()
     );
 };
 
