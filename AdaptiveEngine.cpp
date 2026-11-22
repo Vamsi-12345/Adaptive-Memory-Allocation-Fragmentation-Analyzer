@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <vector>
 #include <algorithm>
+#include <sstream>
+#include <set>
 
 #include "MemoryManager.h"
 #include "MemoryBlock.h"
@@ -18,7 +20,8 @@ AdaptiveResult AdaptiveEngine::evaluateStrategy(
     int totalMemory,
     const vector<Process>& processes,
     AllocationStrategy* strategy,
-    const string& strategyName)
+    const string& strategyName,
+    const vector<string>& eventHistory)
 {
     AdaptiveResult result = {};
 
@@ -32,6 +35,116 @@ AdaptiveResult AdaptiveEngine::evaluateStrategy(
     }
 
     MemoryManager memory(totalMemory, strategy);
+
+    // Replay saved manual allocation/deallocation events when available.
+    // This keeps Adaptive Engine on the same memory history as Strategy Comparison.
+    if (!eventHistory.empty())
+    {
+        set<int> completedPids;
+        double utilizationTotal = 0.0;
+        double finalExternalFragmentation = 0.0;
+        int samples = 0;
+        int validEvents = 0;
+        int peakUsedMemory = 0;
+
+        for (const string& eventLine : eventHistory)
+        {
+            istringstream input(eventLine);
+            string action;
+            int pid = 0;
+            int requestedMemory = 0;
+
+            if (!(input >> action >> pid))
+            {
+                continue;
+            }
+
+            if (action == "Allocation")
+            {
+                if (!(input >> requestedMemory))
+                {
+                    continue;
+                }
+
+                memory.allocate(pid, requestedMemory);
+            }
+            else if (action == "Deallocation")
+            {
+                if (memory.deallocate(pid))
+                {
+                    completedPids.insert(pid);
+                }
+            }
+            else
+            {
+                continue;
+            }
+
+            validEvents++;
+
+            int usedMemory = 0;
+            int freeMemory = 0;
+            int largestFreeBlock = 0;
+
+            for (const MemoryBlock& block : memory.getBlocks())
+            {
+                if (block.isFree())
+                {
+                    freeMemory += block.getSize();
+                    largestFreeBlock = max(largestFreeBlock, block.getSize());
+                }
+                else
+                {
+                    usedMemory += block.getSize();
+                }
+            }
+
+            peakUsedMemory = max(peakUsedMemory, usedMemory);
+            utilizationTotal +=
+                static_cast<double>(usedMemory) / totalMemory * 100.0;
+
+            finalExternalFragmentation = 0.0;
+            if (freeMemory > 0)
+            {
+                finalExternalFragmentation =
+                    static_cast<double>(freeMemory - largestFreeBlock) /
+                    freeMemory * 100.0;
+            }
+
+            samples++;
+        }
+
+        result.completedProcesses = static_cast<int>(completedPids.size());
+        result.totalSimulationTime = validEvents;
+        result.allocationFailures = memory.getAllocationFailures();
+        result.peakUsedMemory = peakUsedMemory;
+
+        if (samples > 0)
+        {
+            result.averageUtilization = utilizationTotal / samples;
+            // Strategy Comparison reports the final saved memory layout's fragmentation.
+            result.averageExternalFragmentation = finalExternalFragmentation;
+        }
+
+        result.utilizationScore = result.averageUtilization;
+        result.fragmentationScore =
+            max(0.0, 100.0 - result.averageExternalFragmentation);
+        result.failureScore =
+            max(0.0, 100.0 - result.allocationFailures * 10.0);
+        result.completionScore =
+            result.totalProcesses > 0
+                ? static_cast<double>(result.completedProcesses) /
+                      result.totalProcesses * 100.0
+                : 0.0;
+
+        result.finalScore =
+            0.35 * result.utilizationScore +
+            0.35 * result.fragmentationScore +
+            0.20 * result.failureScore +
+            0.10 * result.completionScore;
+
+        return result;
+    }
 
     vector<Process> simulationProcesses = processes;
 
@@ -110,25 +223,6 @@ AdaptiveResult AdaptiveEngine::evaluateStrategy(
             }
         }
 
-        // Execute running processes.
-        for (Process& process : simulationProcesses)
-        {
-            if (process.getStatus() != "Running")
-            {
-                continue;
-            }
-
-            runningExists = true;
-            process.decreaseRemainingTime();
-
-            if (process.getRemainingTime() <= 0)
-            {
-                memory.deallocate(process.getProcessId());
-                process.setStatus("Completed");
-                completed++;
-            }
-        }
-
         // Sample memory usage and external fragmentation.
         int usedMemory = 0;
         int freeMemory = 0;
@@ -166,6 +260,23 @@ AdaptiveResult AdaptiveEngine::evaluateStrategy(
 
         fragmentationTotal += fragmentation;
         samples++;
+          for (Process& process : simulationProcesses)
+        {
+            if (process.getStatus() != "Running")
+            {
+                continue;
+            }
+
+            runningExists = true;
+            process.decreaseRemainingTime();
+
+            if (process.getRemainingTime() <= 0)
+            {
+                memory.deallocate(process.getProcessId());
+                process.setStatus("Completed");
+                completed++;
+            }
+        }
 
         if (completed >= static_cast<int>(simulationProcesses.size()))
         {
@@ -253,7 +364,8 @@ void AdaptiveEngine::displayResult(
 
 vector<AdaptiveResult> AdaptiveEngine::getAdaptiveResults(
     int totalMemory,
-    const vector<Process>& processes)
+    const vector<Process>& processes,
+    const vector<string>& eventHistory)
 {
     vector<AdaptiveResult> results;
 
@@ -268,22 +380,23 @@ vector<AdaptiveResult> AdaptiveEngine::getAdaptiveResults(
 
     results.push_back(
         evaluateStrategy(
-            totalMemory, processes, &firstFit, "First Fit"));
+            totalMemory, processes, &firstFit, "First Fit", eventHistory));
 
     results.push_back(
         evaluateStrategy(
-            totalMemory, processes, &bestFit, "Best Fit"));
+            totalMemory, processes, &bestFit, "Best Fit", eventHistory));
 
     results.push_back(
         evaluateStrategy(
-            totalMemory, processes, &worstFit, "Worst Fit"));
+            totalMemory, processes, &worstFit, "Worst Fit", eventHistory));
 
     return results;
 }
 
 void AdaptiveEngine::run(
     int totalMemory,
-    const vector<Process>& processes)
+    const vector<Process>& processes,
+    const vector<string>& eventHistory)
 {
     if (totalMemory <= 0)
     {
@@ -298,7 +411,7 @@ void AdaptiveEngine::run(
     }
 
     vector<AdaptiveResult> results =
-        getAdaptiveResults(totalMemory, processes);
+        getAdaptiveResults(totalMemory, processes, eventHistory);
 
     cout << "\n========================================\n";
     cout << "       ADAPTIVE STRATEGY ENGINE\n";
