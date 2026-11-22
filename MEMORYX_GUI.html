@@ -813,6 +813,25 @@ label {
             Run actual memory allocation using the MEMORYX C++ engine.
             Select a workload, memory size and allocation strategy.
         </p>
+        
+<label>Select Workload</label>
+
+<select id="simulationWorkload">
+    <option value="Basic">Basic Workload</option>
+    <option value="Fragmentation">Fragmentation Workload</option>
+    <option value="Mixed">Mixed Workload</option>
+    <option value="Saved">Saved Custom Workload</option>
+</select>
+
+<div class="actions">
+    <button onclick="loadWorkloadIntoSimulation()">
+        Load Workload
+    </button>
+</div>
+
+<div id="simulationWorkloadPreview" class="result">
+    No workload loaded yet.
+</div>
 
         <label>Total Memory (MB)</label>
 
@@ -921,12 +940,24 @@ label {
             placeholder="Enter memory"
         >
 
+<label>Arrival Time</label>
+<input type="number" id="liveArrival" min="0" value="0">
+
+<label>Execution Time</label>
+<input type="number" id="liveExecution" min="1" value="1">
+
+<label>Priority</label>
+<input type="number" id="livePriority" min="1" value="1">
+
+
         <div class="actions">
 
             <button onclick="allocateLiveProcess()">
                 Allocate Process
             </button>
-
+            <button onclick="saveLiveCustomWorkload()">
+    Save as Custom Workload
+</button>
             <button
                 class="secondary"
                 onclick="deallocateLiveProcess()"
@@ -1574,7 +1605,18 @@ async function saveCustomWorkload() {
             `<b>Save Error:</b> ${error.message}`;
     }
 }
+async function loadWorkloadIntoSimulation() {
+    const selectedWorkload = document.getElementById("simulationWorkload").value;
 
+    // Sync with the existing Workloads selector
+    document.getElementById("workloadType").value = selectedWorkload;
+
+    // Use the existing workload-loading function
+    await selectWorkload();
+
+    document.getElementById("simulationWorkloadPreview").textContent =
+        selectedWorkload + " workload selected. Check the Workloads section for loaded process details.";
+}
 /* ADD CUSTOM PROCESS */
 
 function addProcess() {
@@ -1624,7 +1666,7 @@ function addProcess() {
 async function runMemorySimulation() {
     const total = Number(document.getElementById("totalMemory").value);
     const strategy = document.getElementById("strategy").value;
-    const workloadType = document.getElementById("workloadType").value;
+   const workloadType = document.getElementById("simulationWorkload").value;
 
     const blocksBox = document.getElementById("memoryBlocks");
     const resultBox = document.getElementById("simulationResult");
@@ -1634,12 +1676,7 @@ async function runMemorySimulation() {
         return;
     }
 
-    if (workloadType === "Custom") {
-        resultBox.textContent =
-            "Custom workload integration is not available yet.";
-        return;
-    }
-
+   
     resultBox.textContent = "Running C++ memory simulation...";
     blocksBox.innerHTML = "";
 
@@ -1732,6 +1769,73 @@ function resetSimulation() {
         "Simulation has been reset.";
 }
 
+async function saveLiveCustomWorkload() {
+
+    const processes = window.liveCustomProcesses || [];
+
+    if (processes.length === 0) {
+        alert("Please allocate at least one process first.");
+        return;
+    }
+
+    const workloadName = prompt("Enter a name for your custom workload:");
+
+    if (!workloadName || !workloadName.trim()) {
+        return;
+    }
+
+    const resultBox = document.getElementById("liveSimulationResults");
+    resultBox.textContent = "Saving your custom workload...";
+
+    try {
+        const response = await fetch("/api/save-workload", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: workloadName.trim(),
+                processes: processes.map(p => ({
+                    pid: Number(p.pid),
+                    memory: Number(p.memory),
+                    arrival: Number(p.arrival),
+                    execution: Number(p.execution),
+                    priority: Number(p.priority)
+                }))
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Unable to save workload.");
+        }
+
+        resultBox.textContent = result.message +
+            " You can now select Saved Workload in other modules.";
+
+        const selectors = [
+            "workloadType",
+            "simulationWorkload",
+            "comparisonWorkload",
+            "adaptiveWorkload",
+            "liveWorkloadType"
+        ];
+
+        selectors.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.value = "Saved";
+            }
+        });
+
+        alert("Custom workload saved successfully!");
+
+    } catch (error) {
+        resultBox.textContent = "Save Error: " + error.message;
+    }
+}
+
 
 /* ==========================================
    THREE STRATEGY LIVE MEMORY SIMULATION
@@ -1768,6 +1872,7 @@ function initializeLiveSimulation() {
     });
 
     liveHistory = [];
+    window.liveCustomProcesses = [];
     liveInitialized = true;
 
     renderLiveSimulation("All three strategies initialized.");
@@ -1856,6 +1961,7 @@ function allocateInStrategy(blocks, pid, required, strategy) {
 }
 
 
+
 function allocateLiveProcess() {
 
     if (!liveInitialized) {
@@ -1863,21 +1969,20 @@ function allocateLiveProcess() {
         return;
     }
 
-    const pid = Number(
-        document.getElementById("livePID").value
-    );
-
-    const required = Number(
-        document.getElementById("liveMemory").value
-    );
+    const pid = Number(document.getElementById("livePID").value);
+    const required = Number(document.getElementById("liveMemory").value);
+    const arrival = Number(document.getElementById("liveArrival").value);
+    const execution = Number(document.getElementById("liveExecution").value);
+    const priority = Number(document.getElementById("livePriority").value);
 
     if (
-        !Number.isInteger(pid) ||
-        pid < 0 ||
-        !Number.isInteger(required) ||
-        required <= 0
+        !Number.isInteger(pid) || pid <= 0 ||
+       !Number.isFinite(required) || required <= 0 ||
+        !Number.isInteger(arrival) || arrival < 0 ||
+        !Number.isInteger(execution) || execution <= 0 ||
+        !Number.isInteger(priority) || priority <= 0
     ) {
-        alert("Enter a valid PID and memory requirement.");
+        alert("Enter valid values in all five fields.");
         return;
     }
 
@@ -1907,6 +2012,21 @@ function allocateLiveProcess() {
             message: result.message
         });
     });
+
+    // Store process details for Custom Workload
+    if (!Array.isArray(window.liveCustomProcesses)) {
+        window.liveCustomProcesses = [];
+    }
+
+    if (results.some(result => result.success)) {
+        window.liveCustomProcesses.push({
+            pid: pid,
+            memory: required,
+            arrival: arrival,
+            execution: execution,
+            priority: priority
+        });
+    }
 
     liveHistory.push({
         action: "Allocation",
