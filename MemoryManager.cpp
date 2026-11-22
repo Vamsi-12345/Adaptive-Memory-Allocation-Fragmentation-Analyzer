@@ -1,90 +1,231 @@
-#include "ProcessManager.h"
+#include "MemoryManager.h"
 #include <iostream>
 
 using namespace std;
 
-ProcessManager::ProcessManager()
+MemoryManager::MemoryManager(
+    int memorySize,
+    AllocationStrategy* allocationStrategy)
 {
+    totalMemory = memorySize;
+    strategy = allocationStrategy;
+    allocationFailures = 0;
+
+    blocks.push_back(
+        MemoryBlock(
+            0,
+            totalMemory,
+            true,
+            -1
+        )
+    );
 }
 
-void ProcessManager::addProcess(const Process& process)
+void MemoryManager::displayMemory() const
 {
-    processes.push_back(process);
-}
+    cout << "Total Simulated Memory: "
+         << totalMemory
+         << " MB"
+         << endl;
 
-bool ProcessManager::removeProcess(int processId)
-{
-    for (auto it = processes.begin();
-         it != processes.end();
-         ++it)
+    cout << "Memory Blocks:" << endl;
+
+    for (const MemoryBlock& block : blocks)
     {
-        if (it->getProcessId() == processId)
-        {
-            processes.erase(it);
-            return true;
-        }
+        block.display();
+        cout << endl;
+    }
+}
+
+bool MemoryManager::canAllocate(
+    int memoryRequired) const
+{
+    if (memoryRequired <= 0)
+    {
+        return false;
     }
 
-    return false;
+    if (memoryRequired > totalMemory)
+    {
+        return false;
+    }
+
+    if (strategy == nullptr)
+    {
+        return false;
+    }
+
+    // IMPORTANT:
+    // Check whether a suitable CONTIGUOUS free block exists.
+    int index = strategy->findBlock(
+        blocks,
+        memoryRequired
+    );
+
+    return index != -1;
 }
 
-Process* ProcessManager::getProcess(int processId)
+bool MemoryManager::allocate(
+    int processId,
+    int memoryRequired)
 {
+    if (memoryRequired <= 0)
+    {
+        allocationFailures++;
+
+        cout << "Allocation Failed: "
+             << "Memory requirement must be greater than 0."
+             << endl;
+
+        return false;
+    }
+
+    if (memoryRequired > totalMemory)
+    {
+        allocationFailures++;
+
+        cout << "Allocation Failed: "
+             << "Requested memory exceeds total memory."
+             << endl;
+
+        return false;
+    }
+
+    if (strategy == nullptr)
+    {
+        allocationFailures++;
+
+        cout << "Allocation Failed: "
+             << "Allocation strategy is not available."
+             << endl;
+
+        return false;
+    }
+
+    int index = strategy->findBlock(
+        blocks,
+        memoryRequired
+    );
+
+    if (index == -1)
+    {
+        allocationFailures++;
+
+        return false;
+    }
+
+    int originalSize =
+        blocks[index].getSize();
+
+    int startAddress =
+        blocks[index].getStartAddress();
+
+    blocks[index].setSize(
+        memoryRequired
+    );
+
+    blocks[index].setFree(false);
+
+    blocks[index].setProcessId(
+        processId
+    );
+
+    if (originalSize > memoryRequired)
+    {
+        MemoryBlock remainingBlock(
+            startAddress + memoryRequired,
+            originalSize - memoryRequired,
+            true,
+            -1
+        );
+
+        blocks.insert(
+            blocks.begin() + index + 1,
+            remainingBlock
+        );
+    }
+
+    return true;
+}
+
+bool MemoryManager::deallocate(
+    int processId)
+{
+    int blockIndex = -1;
+
     for (int i = 0;
-         i < static_cast<int>(processes.size());
+         i < static_cast<int>(blocks.size());
          i++)
     {
-        if (processes[i].getProcessId() == processId)
+        if (!blocks[i].isFree() &&
+            blocks[i].getProcessId() == processId)
         {
-            return &processes[i];
+            blockIndex = i;
+            break;
         }
     }
 
-    return nullptr;
-}
-
-const vector<Process>& ProcessManager::getProcesses() const
-{
-    return processes;
-}
-
-void ProcessManager::displayProcesses() const
-{
-    cout << endl;
-    cout << "==============================================" << endl;
-    cout << "              PROCESS LIST" << endl;
-    cout << "==============================================" << endl;
-
-    if (processes.empty())
+    if (blockIndex == -1)
     {
-        cout << "No processes available." << endl;
+        cout << "Deallocation Failed: Process "
+             << processId
+             << " not found."
+             << endl;
+
+        return false;
+    }
+
+    blocks[blockIndex].setFree(true);
+    blocks[blockIndex].setProcessId(-1);
+
+    mergeFreeBlocks();
+
+    return true;
+}
+
+void MemoryManager::mergeFreeBlocks()
+{
+    if (blocks.size() < 2)
+    {
         return;
     }
 
-    cout << "---------------------------------------------------------------" << endl;
-    cout << "PID\tMemory\tArrival\tExecution\tPriority\tStatus" << endl;
-    cout << "---------------------------------------------------------------" << endl;
-
-    for (const Process& process : processes)
+    for (int i = 0;
+         i < static_cast<int>(blocks.size()) - 1;
+         i++)
     {
-        cout << process.getProcessId() << "\t"
-             << process.getMemoryRequired() << "\t"
-             << process.getArrivalTime() << "\t"
-             << process.getExecutionTime() << "\t\t"
-             << process.getPriority() << "\t\t"
-             << process.getStatus()
-             << endl;
+        if (blocks[i].isFree() &&
+            blocks[i + 1].isFree())
+        {
+            int mergedSize =
+                blocks[i].getSize() +
+                blocks[i + 1].getSize();
+
+            blocks[i].setSize(
+                mergedSize
+            );
+
+            blocks.erase(
+                blocks.begin() + i + 1
+            );
+
+            i--;
+        }
     }
-
-    cout << "---------------------------------------------------------------" << endl;
 }
 
-void ProcessManager::clearProcesses()
+int MemoryManager::getTotalMemory() const
 {
-    processes.clear();
+    return totalMemory;
 }
 
-int ProcessManager::getProcessCount() const
+const vector<MemoryBlock>&
+MemoryManager::getBlocks() const
 {
-    return static_cast<int>(processes.size());
+    return blocks;
+}
+
+int MemoryManager::getAllocationFailures() const
+{
+    return allocationFailures;
 }
